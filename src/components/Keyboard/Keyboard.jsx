@@ -102,7 +102,10 @@ export default function Keyboard({
           type="button"
           className={styles.hexBadge}
           style={{ left: `${badgeLeft}%`, top: `${badgeTop}%` }}
-          onClick={() => navigator.clipboard?.writeText(badgeHex)}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard?.writeText(badgeHex);
+          }}
           title="Click to copy"
         >
           {badgeHex}

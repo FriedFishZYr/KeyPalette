@@ -38,11 +38,13 @@
   cursor: pointer;
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform 120ms ease;
+  transition: transform 100ms ease;
 }
 
+/* Press feedback (V3 §3): geometric only — a brief shrink, no color/brightness
+   change, so the fill always shows the key's true color. */
 .keycap:active {
-  transform: scale(0.94);
+  transform: scale(0.97);
 }
 
 .keyRect {
@@ -50,15 +52,12 @@
   stroke-width: 1;
   rx: 6;
   ry: 6;
-  transition: fill 150ms ease, filter 120ms ease;
-}
-
-.keycap:hover .keyRect {
-  filter: brightness(0.93);
+  transition: fill 150ms ease;
 }
 
 .keyLabel {
-  fill: #222;
+  /* fill is set per key in KeyCap.jsx (auto-contrast, V3 §6) — keep it out of
+     CSS so the presentation attribute isn't overridden by the stylesheet. */
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 11px;
   letter-spacing: 0.02em;
@@ -66,16 +65,34 @@
   user-select: none;
 }
 
-/* ── Selection ring ───────────────────────────────────────────────── */
+/* ── Selection / hover rings (V3 §3) ──────────────────────────────── */
 .selectionRing {
   fill: none;
-  stroke: var(--ring, #fff);
+  stroke: var(--ws-accent);
   stroke-width: 2;
+  pointer-events: none;
 }
 
-.selectionShadow {
+/* Contrasting halo just outside the accent ring, drawn in the workspace bg so
+   the selection stays legible over any keycap color and either theme. */
+.selectionHalo {
   fill: none;
-  filter: url(#sel-glow);
+  stroke: var(--ws-bg);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.hoverRing {
+  fill: none;
+  stroke: var(--ws-accent);
+  stroke-width: 1;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.keycap:hover .hoverRing {
+  opacity: 0.5;
 }
 
 /* ── WorkspaceToggle ──────────────────────────────────────────────── */

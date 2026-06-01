@@ -28,6 +28,16 @@ export default function App() {
     return () => ro.disconnect();
   }, []);
 
+  // Escape clears the current selection (V3 §4); the hex badge dismisses with
+  // it since it only renders for a single-key selection.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') actions.clearSelection();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [actions]);
+
   return (
     <div className={styles.app} data-workspace={state.workspace}>
       <WorkspaceToggle workspace={state.workspace} onToggle={actions.setWorkspace} />
@@ -37,7 +47,7 @@ export default function App() {
         keyboardRef={keyboardRef}
         onExtractFromImage={() => setImageModalOpen(true)}
       />
-      <main className={styles.main} ref={mainRef}>
+      <main className={styles.main} ref={mainRef} onClick={actions.clearSelection}>
         <Keyboard
           state={state}
           actions={actions}

@@ -26,6 +26,9 @@
   --surface-hover: rgba(255, 255, 255, 0.1);
   --accent: #4a90d9;
   --ring: #fff;
+  /* Selection frame accent (V3 §3): one hue that reads on both #111 and #f0f0f0
+     backgrounds and over any keycap color. */
+  --ws-accent: #4f8cff;
 }
 
 :global([data-workspace="light"]) {
@@ -41,6 +44,7 @@
   --surface-hover: rgba(0, 0, 0, 0.08);
   --accent: #2b6cb0;
   --ring: #333;
+  --ws-accent: #4f8cff;
 }
 
 /* ── Layout ───────────────────────────────────────────────────────── */

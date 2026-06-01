@@ -156,6 +156,21 @@ export default function useColorway() {
     [setStore],
   );
 
+  // Clears the current selection (V3 §4). Used by background clicks and the
+  // Escape key; because the hex badge only renders for a single selection,
+  // clearing also dismisses the badge.
+  const clearSelection = useCallback(() => {
+    setStore((prev) => {
+      const p = typeof prev === 'function' ? prev() : prev;
+      const cur = p.slots[p.active];
+      if (cur.selectedKeys.length === 0) return p;
+      const activeColor = computeActiveColor([], cur.keyColors, cur.activeColor);
+      const newSlots = [...p.slots];
+      newSlots[p.active] = { ...cur, selectedKeys: [], activeColor };
+      return { ...p, slots: newSlots };
+    });
+  }, [setStore]);
+
   const selectZone = useCallback(
     (zoneKey) => {
       setStore((prev) => {
@@ -320,6 +335,7 @@ export default function useColorway() {
       setActiveColor,
       applyColorToSelected,
       toggleKeySelected,
+      clearSelection,
       selectZone,
       setCaseColor,
       setCaseFinish,
@@ -336,7 +352,7 @@ export default function useColorway() {
     }),
     [
       setLayout, setActiveColor, applyColorToSelected, toggleKeySelected,
-      selectZone, setCaseColor, setCaseFinish, setWorkspace,
+      clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
       resetSelectedKeys, resetAll, applyPreset, importColorway,
       addColorsToHistory, clearColorHistory,
       saveSlot, loadSlot, createSlot,
