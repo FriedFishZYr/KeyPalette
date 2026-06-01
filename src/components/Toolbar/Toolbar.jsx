@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import LayoutSelector from './LayoutSelector.jsx';
 import ZonePanel from './ZonePanel.jsx';
 import ColorPanel from './ColorPanel.jsx';
@@ -16,6 +17,9 @@ const RESET_ALL_PROMPT =
 const CASE_FINISHES = ['matte', 'gloss'];
 
 export default function Toolbar({ state, actions, keyboardRef, onExtractFromImage }) {
+  // Presets collapse to keep the (now 16-strong) list from crowding the panel.
+  const [presetsOpen, setPresetsOpen] = useState(false);
+
   const handleResetAll = () => {
     if (window.confirm(RESET_ALL_PROMPT)) {
       actions.resetAll();
@@ -40,21 +44,41 @@ export default function Toolbar({ state, actions, keyboardRef, onExtractFromImag
     <aside className={styles.toolbar}>
       <LayoutSelector current={state.layout} onSelect={actions.setLayout} />
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Presets</h3>
-        <div className={styles.presetGroup}>
-          {presets.map((preset) => (
-            <button
-              key={preset.name}
-              type="button"
-              className={styles.presetPill}
-              onClick={() => handlePreset(preset)}
-            >
-              {preset.name}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          className={styles.sectionToggle}
+          onClick={() => setPresetsOpen((v) => !v)}
+          aria-expanded={presetsOpen}
+        >
+          <span className={styles.sectionTitle}>Presets</span>
+          <span className={styles.sectionMeta}>
+            <span className={styles.sectionCount}>{presets.length}</span>
+            <span className={styles.sectionChevron} aria-hidden="true">
+              {presetsOpen ? '▾' : '▸'}
+            </span>
+          </span>
+        </button>
+        {presetsOpen && (
+          <div className={styles.presetGroup}>
+            {presets.map((preset) => (
+              <button
+                key={preset.name}
+                type="button"
+                className={styles.presetPill}
+                onClick={() => handlePreset(preset)}
+              >
+                <span className={styles.presetDots} aria-hidden="true">
+                  <span className={styles.presetDot} style={{ background: preset.zones.alpha }} />
+                  <span className={styles.presetDot} style={{ background: preset.zones.modifier }} />
+                  <span className={styles.presetDot} style={{ background: preset.caseColor }} />
+                </span>
+                {preset.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      <ZonePanel onSelectZone={actions.selectZone} />
+      <ZonePanel state={state} onSelectZone={actions.selectZone} />
       <ColorPanel
         activeColor={state.activeColor}
         onColorChange={actions.setActiveColor}

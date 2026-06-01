@@ -41,10 +41,102 @@
   color: var(--ws-label-muted);
 }
 
+/* ── Collapsible section header (V3 §8) ───────────────────────────── */
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sectionMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sectionCount {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ws-label-muted);
+}
+
+.sectionChevron {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--ws-label-muted);
+  transition: color 120ms ease;
+}
+
+.sectionToggle:hover .sectionTitle,
+.sectionToggle:hover .sectionChevron,
+.sectionToggle:hover .sectionCount {
+  color: var(--ws-label);
+}
+
 .buttonGroup {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* ── Visual zone pills (V3 §7) ────────────────────────────────────── */
+.zonePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 5px;
+  border: 1px solid var(--ws-input-border);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--ws-label-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.zonePill:hover:not(:disabled) {
+  color: var(--ws-label);
+  border-color: var(--ws-label-muted);
+  background: var(--surface-hover);
+}
+
+.zonePill:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Matches the canvas selection frame (--ws-accent) so selection reads the same
+   in the panel and on the board. */
+.zonePillActive {
+  color: var(--ws-label);
+  border-color: var(--ws-accent);
+  box-shadow: 0 0 0 1px var(--ws-accent);
+}
+
+.zoneDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--ws-key-border);
+  flex: none;
+}
+
+/* Reuse of the V2 mixed-color diagonal-stripe pattern, scaled to the dot. */
+.zoneDotMixed {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--ws-input-bg),
+    var(--ws-input-bg) 3px,
+    var(--ws-panel) 3px,
+    var(--ws-panel) 6px
+  );
 }
 
 /* ── Zone / Layout pills ─────────────────────────────────────────── */
@@ -177,7 +269,10 @@
 }
 
 .presetPill {
-  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
   border: 1px solid var(--ws-input-border);
   border-radius: 100px;
   background: transparent;
@@ -193,6 +288,20 @@
   color: var(--ws-label);
   border-color: var(--ws-label-muted);
   background: var(--surface-hover);
+}
+
+/* Mini-preview dots: alpha / modifier / case (V3 §8). */
+.presetDots {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+
+.presetDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ws-key-border);
 }
 
 /* ── Extract from image ───────────────────────────────────────────── */
