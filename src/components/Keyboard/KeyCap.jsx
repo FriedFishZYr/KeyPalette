@@ -12,6 +12,7 @@ export default function KeyCap({
   profile,
   legendColor = 'auto',
   legendPosition = 'top',
+  interactive = true,
 }) {
   const x = keyData.x * unit + GAP / 2;
   const y = keyData.y * unit + GAP / 2;
@@ -70,11 +71,14 @@ export default function KeyCap({
     // selection (V3 §4) — without this, selecting a key would instantly
     // deselect it.
     e.stopPropagation();
-    onClick(keyData.id, e.shiftKey);
+    onClick?.(keyData.id, e.shiftKey);
   };
 
   return (
-    <g className={styles.keycap} onClick={handleClick}>
+    <g
+      className={interactive ? styles.keycap : undefined}
+      onClick={interactive ? handleClick : undefined}
+    >
       {isFlat ? (
         /* Flat (default): a single rounded rect in the true color, V2 border,
            lift shadow when selected. */
@@ -129,8 +133,9 @@ export default function KeyCap({
         </>
       )}
       {/* Hover affordance (V3 §3): a faint accent ring, only when not selected
-          so it stays visually distinct from the solid selection ring. */}
-      {!selected && (
+          so it stays visually distinct from the solid selection ring. Skipped
+          for read-only boards (comparison B). */}
+      {interactive && !selected && (
         <rect
           x={x - 1}
           y={y - 1}

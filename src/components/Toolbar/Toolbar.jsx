@@ -16,9 +16,18 @@ const RESET_ALL_PROMPT =
 
 const CASE_FINISHES = ['matte', 'gloss'];
 
-export default function Toolbar({ state, actions, keyboardRef, onExtractFromImage }) {
+export default function Toolbar({
+  state,
+  actions,
+  slots = [],
+  keyboardRef,
+  comparisonRefB,
+  onExtractFromImage,
+}) {
   // Presets collapse to keep the (now 16-strong) list from crowding the panel.
   const [presetsOpen, setPresetsOpen] = useState(false);
+
+  const comparison = state.comparison;
 
   const handleResetAll = () => {
     if (window.confirm(RESET_ALL_PROMPT)) {
@@ -173,7 +182,85 @@ export default function Toolbar({ state, actions, keyboardRef, onExtractFromImag
           ))}
         </div>
       </div>
-      <ExportPanel state={state} actions={actions} keyboardRef={keyboardRef} />
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Comparison</h3>
+        <div className={styles.segmented} role="group" aria-label="Comparison mode">
+          <button
+            type="button"
+            className={`${styles.segmentBtn} ${comparison.active ? styles.segmentBtnActive : ''}`}
+            onClick={actions.toggleComparison}
+            aria-pressed={comparison.active}
+          >
+            {comparison.active ? 'Comparing A / B' : 'Compare A / B'}
+          </button>
+        </div>
+        {comparison.active && (
+          <div className={styles.compareControls}>
+            <span className={styles.compareHint}>Set B from</span>
+            <button
+              type="button"
+              className={styles.extractBtn}
+              onClick={() => actions.setComparisonBoard(actions.snapshotCurrent())}
+            >
+              Duplicate A
+            </button>
+            <select
+              className={styles.compareSelect}
+              value=""
+              onChange={(e) => {
+                const idx = Number(e.target.value);
+                if (presets[idx]) {
+                  actions.setComparisonBoard(actions.snapshotFromPreset(presets[idx]));
+                }
+                e.target.value = '';
+              }}
+            >
+              <option value="" disabled>
+                Load preset…
+              </option>
+              {presets.map((p, i) => (
+                <option key={p.name} value={i}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            {slots.length > 0 && (
+              <div className={styles.buttonGroup}>
+                {slots.map((sl, i) => {
+                  const match = sl.layout === state.layout;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      className={styles.btn}
+                      disabled={!match}
+                      title={match ? 'Load this slot into B' : 'Different layout'}
+                      onClick={() => actions.setComparisonBoard(actions.snapshotFromSlot(sl))}
+                    >
+                      {sl.colorwayName || `Slot ${i + 1}`}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {comparison.board && (
+              <button
+                type="button"
+                className={styles.resetSelectedBtn}
+                onClick={actions.clearComparisonBoard}
+              >
+                Clear B
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      <ExportPanel
+        state={state}
+        actions={actions}
+        keyboardRef={keyboardRef}
+        comparisonRefB={comparisonRefB}
+      />
       <div className={styles.dangerSection}>
         <button
           type="button"

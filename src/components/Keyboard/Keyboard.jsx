@@ -13,8 +13,15 @@ export default function Keyboard({
   svgRef,
   availableWidth = 0,
   availableHeight = 0,
+  data = null,
+  readOnly = false,
+  boardId,
 }) {
-  const keys = layouts[state.layout] ?? [];
+  // `data` lets this render an arbitrary colorway snapshot (comparison board B,
+  // V3 §9) instead of the live state. readOnly disables selection/clicks/badge.
+  const board = data ?? state;
+  const keys = layouts[board.layout] ?? [];
+  const selectedKeys = readOnly ? [] : state.selectedKeys;
 
   const maxX = Math.max(...keys.map((k) => k.x + k.w));
   const maxY = Math.max(...keys.map((k) => k.y + k.h));
@@ -27,7 +34,7 @@ export default function Keyboard({
 
   // Active keycap profile (V3 §5). The dish gradient is declared once below
   // using this profile's strength, then mapped to each key's top surface.
-  const profile = PROFILES[state.profile] ?? PROFILES.cherry;
+  const profile = PROFILES[board.profile] ?? PROFILES.flat;
 
   // Scale-to-fit: shrink the board to fit the canvas region on either axis,
   // capped at 1 (never enlarge beyond native). Falls back to 1 until the
@@ -37,14 +44,14 @@ export default function Keyboard({
       ? Math.min(1, availableWidth / svgW, availableHeight / svgH)
       : 1;
 
-  // Hex badge (V2 §10): only when exactly one key is selected. Positioned as a
-  // percentage of the wrapper so it tracks the key even when the responsive
-  // SVG scales down. Centered on the key's x-midpoint, 4px below it (CSS gap).
+  // Hex badge (V2 §10): only when exactly one key is selected (never on a
+  // read-only comparison board). Positioned as a percentage of the wrapper so
+  // it tracks the key even when the SVG scales down.
   const selectedKey =
-    state.selectedKeys.length === 1
-      ? keys.find((k) => k.id === state.selectedKeys[0])
+    selectedKeys.length === 1
+      ? keys.find((k) => k.id === selectedKeys[0])
       : null;
-  const badgeHex = selectedKey ? state.keyColors[selectedKey.id] ?? '#e0e0e0' : null;
+  const badgeHex = selectedKey ? board.keyColors[selectedKey.id] ?? '#e0e0e0' : null;
   const badgeLeft = selectedKey
     ? (((selectedKey.x + selectedKey.w / 2) * UNIT + CASE_PADDING) / svgW) * 100
     : 0;
@@ -56,6 +63,7 @@ export default function Keyboard({
     <div
       className={styles.boardWrap}
       ref={svgRef}
+      data-board={boardId}
       style={{ transform: `scale(${fitScale})` }}
     >
     <svg
@@ -65,7 +73,7 @@ export default function Keyboard({
       viewBox={`${-CASE_PADDING} ${-CASE_PADDING} ${svgW} ${svgH}`}
     >
       <defs>
-        <CaseFilter id={filterId} caseFinish={state.caseFinish} />
+        <CaseFilter id={filterId} caseFinish={board.caseFinish} />
         {/* Dish overlay (V3 §5): a color-independent light→neutral→dark gradient
             declared once and reused by every key. Cylindrical = vertical
             (lighter top, darker bottom); spherical = radial (lighter center,
@@ -92,8 +100,8 @@ export default function Keyboard({
       <Case
         width={boardW}
         height={boardH}
-        caseColor={state.caseColor}
-        caseFinish={state.caseFinish}
+        caseColor={board.caseColor}
+        caseFinish={board.caseFinish}
         filterId={filterId}
       />
       {keys.map((k) => (
@@ -101,12 +109,13 @@ export default function Keyboard({
           key={k.id}
           keyData={k}
           unit={UNIT}
-          color={state.keyColors[k.id] ?? '#e0e0e0'}
-          selected={state.selectedKeys.includes(k.id)}
-          onClick={actions.toggleKeySelected}
+          color={board.keyColors[k.id] ?? '#e0e0e0'}
+          selected={selectedKeys.includes(k.id)}
+          onClick={readOnly ? undefined : actions.toggleKeySelected}
+          interactive={!readOnly}
           profile={profile}
-          legendColor={state.legendColor}
-          legendPosition={state.legendPosition}
+          legendColor={board.legendColor}
+          legendPosition={board.legendPosition}
         />
       ))}
     </svg>

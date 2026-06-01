@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import useLocalStorage from './useLocalStorage.js';
 import layouts from '../data/layouts/index.js';
 
@@ -49,6 +49,10 @@ export default function useColorway() {
 
   const [colorHistory, setColorHistory] = useLocalStorage(HISTORY_KEY, EMPTY_HISTORY);
 
+  // Comparison (V3 §9) is session-only — deliberately NOT persisted, so it
+  // lives in component state rather than the localStorage slot store.
+  const [comparison, setComparison] = useState({ active: false, board: null });
+
   // Lazily normalise: if store was built by the factory, call it
   const normalised = typeof store === 'function' ? store() : store;
   const { active, slots } = normalised;
@@ -56,12 +60,13 @@ export default function useColorway() {
   // colorHistory lives in its own localStorage key but is surfaced on the
   // state object so consumers can read it like any other field.
   // V3 fields are default-filled here so pre-V3 slots (saved without them)
-  // load cleanly; full persistence/round-trip is handled in step 10.
+  // load cleanly (backward compatible).
   const state = {
     ...slot,
     profile: slot.profile ?? 'flat',
     legendColor: slot.legendColor ?? 'auto',
     legendPosition: slot.legendPosition ?? 'top',
+    comparison,
     colorHistory,
   };
 
@@ -288,8 +293,10 @@ export default function useColorway() {
     [setStore],
   );
 
-  // Applies a validated imported colorway (V2 §9) onto the active slot,
-  // overwriting layout, case, key colors, and name. Selection is cleared.
+  // Applies a validated imported colorway (V2 §9 / V3 §10) onto the active
+  // slot, overwriting layout, case, key colors, name, and the V3 visual fields.
+  // deserializeColorway default-fills profile/legendColor/legendPosition for
+  // older (v1/v2) files, so they're always present here. Selection is cleared.
   const importColorway = useCallback(
     (data) => {
       setStore((prev) => {
@@ -304,6 +311,9 @@ export default function useColorway() {
           layout: data.layout,
           caseColor: data.caseColor ?? cur.caseColor,
           caseFinish: data.caseFinish ?? cur.caseFinish,
+          profile: data.profile ?? cur.profile ?? 'flat',
+          legendColor: data.legendColor ?? cur.legendColor ?? 'auto',
+          legendPosition: data.legendPosition ?? cur.legendPosition ?? 'top',
           keyColors,
           colorwayName: data.name ?? cur.colorwayName,
           selectedKeys,
@@ -352,6 +362,74 @@ export default function useColorway() {
     });
   }, [setStore]);
 
+  // ── Comparison (V3 §9) ──────────────────────────────────────────────────
+  // A read-only board "B" snapshot, rendered next to the live board "A".
+
+  // Snapshot of the current live colorway (board A). Read synchronously off the
+  // ref so it captures the latest committed state.
+  const snapshotCurrent = useCallback(() => {
+    const s = stateRef.current;
+    return {
+      name: s.colorwayName,
+      layout: s.layout,
+      caseColor: s.caseColor,
+      caseFinish: s.caseFinish,
+      profile: s.profile,
+      legendColor: s.legendColor,
+      legendPosition: s.legendPosition,
+      keyColors: { ...s.keyColors },
+    };
+  }, []);
+
+  // Snapshot built from a zone-based preset, mapped onto A's current layout.
+  // Inherits A's profile/legend so the comparison differs only in colors.
+  const snapshotFromPreset = useCallback((preset) => {
+    const s = stateRef.current;
+    const layoutKeys = layouts[s.layout] ?? [];
+    const keyColors = {};
+    for (const k of layoutKeys) {
+      const zoneColor = preset.zones[k.zone];
+      if (zoneColor) keyColors[k.id] = zoneColor;
+    }
+    return {
+      name: preset.name,
+      layout: s.layout,
+      caseColor: preset.caseColor,
+      caseFinish: preset.caseFinish,
+      profile: s.profile,
+      legendColor: 'auto',
+      legendPosition: 'top',
+      keyColors,
+    };
+  }, []);
+
+  // Snapshot from a saved slot (default-filling pre-V3 fields).
+  const snapshotFromSlot = useCallback(
+    (slotData) => ({
+      name: slotData.colorwayName ?? 'Saved',
+      layout: slotData.layout,
+      caseColor: slotData.caseColor,
+      caseFinish: slotData.caseFinish,
+      profile: slotData.profile ?? 'flat',
+      legendColor: slotData.legendColor ?? 'auto',
+      legendPosition: slotData.legendPosition ?? 'top',
+      keyColors: { ...slotData.keyColors },
+    }),
+    [],
+  );
+
+  const toggleComparison = useCallback(() => {
+    setComparison((c) => ({ ...c, active: !c.active }));
+  }, []);
+
+  const setComparisonBoard = useCallback((snapshot) => {
+    setComparison({ active: true, board: snapshot });
+  }, []);
+
+  const clearComparisonBoard = useCallback(() => {
+    setComparison((c) => ({ ...c, board: null }));
+  }, []);
+
   const actions = useMemo(
     () => ({
       setLayout,
@@ -375,6 +453,12 @@ export default function useColorway() {
       saveSlot,
       loadSlot,
       createSlot,
+      snapshotCurrent,
+      snapshotFromPreset,
+      snapshotFromSlot,
+      toggleComparison,
+      setComparisonBoard,
+      clearComparisonBoard,
     }),
     [
       setLayout, setActiveColor, applyColorToSelected, toggleKeySelected,
@@ -383,6 +467,8 @@ export default function useColorway() {
       resetSelectedKeys, resetAll, applyPreset, importColorway,
       addColorsToHistory, clearColorHistory,
       saveSlot, loadSlot, createSlot,
+      snapshotCurrent, snapshotFromPreset, snapshotFromSlot,
+      toggleComparison, setComparisonBoard, clearComparisonBoard,
     ],
   );
 

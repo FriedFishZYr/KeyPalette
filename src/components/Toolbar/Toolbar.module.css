@@ -435,6 +435,34 @@
   color: #fff;
 }
 
+/* ── Comparison controls (V3 §9) ──────────────────────────────────── */
+.compareControls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.compareHint {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ws-label-muted);
+}
+
+.compareSelect {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--ws-input-border);
+  border-radius: 6px;
+  background: var(--ws-input-bg);
+  color: var(--ws-label);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 /* ── Color preview / mixed-color indicator (V2 §10) ───────────────── */
 .currentSwatch {
   height: 28px;

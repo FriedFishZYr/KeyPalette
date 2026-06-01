@@ -1,15 +1,17 @@
 import { useRef, useState, useEffect } from 'react';
 import useColorway from './hooks/useColorway.js';
 import Keyboard from './components/Keyboard/Keyboard.jsx';
+import ComparisonView from './components/ComparisonView/ComparisonView.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
 import WorkspaceToggle from './components/WorkspaceToggle.jsx';
 import ImagePaletteModal from './components/ImagePaletteModal/ImagePaletteModal.jsx';
 import styles from './App.module.css';
 
 export default function App() {
-  const { state, actions } = useColorway();
+  const { state, slots, actions } = useColorway();
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const keyboardRef = useRef(null);
+  const boardRefB = useRef(null);
 
   // Scale-to-fit: measure the canvas region's content box so Keyboard can
   // shrink the board to fit without clipping (capped at 1x). No new colorway
@@ -44,17 +46,31 @@ export default function App() {
       <Toolbar
         state={state}
         actions={actions}
+        slots={slots}
         keyboardRef={keyboardRef}
+        comparisonRefB={boardRefB}
         onExtractFromImage={() => setImageModalOpen(true)}
       />
       <main className={styles.main} ref={mainRef} onClick={actions.clearSelection}>
-        <Keyboard
-          state={state}
-          actions={actions}
-          svgRef={keyboardRef}
-          availableWidth={canvasSize.width}
-          availableHeight={canvasSize.height}
-        />
+        {state.comparison.active ? (
+          <ComparisonView
+            state={state}
+            actions={actions}
+            keyboardRef={keyboardRef}
+            boardRefB={boardRefB}
+            availableWidth={canvasSize.width}
+            availableHeight={canvasSize.height}
+          />
+        ) : (
+          <Keyboard
+            state={state}
+            actions={actions}
+            svgRef={keyboardRef}
+            boardId="a"
+            availableWidth={canvasSize.width}
+            availableHeight={canvasSize.height}
+          />
+        )}
       </main>
       {imageModalOpen && (
         <ImagePaletteModal

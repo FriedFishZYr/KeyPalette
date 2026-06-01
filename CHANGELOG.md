@@ -2,6 +2,39 @@
 
 ---
 
+## V3 — Visual Fidelity & Comparison
+
+**Theme:** Make the board look like real keycaps, keep it front-and-center while you work, sharpen the selection model, and add side-by-side comparison. Additive only — all V1/V2 behavior preserved. Zero new dependencies.
+
+### Added
+- **Color math utilities** — `luminance`, `mix`, `lighten`, `darken`, `shadeTowardContrast` (luminance-aware), `contrastText`; the basis for shading, legend contrast, and selection framing
+- **Scale-to-fit app shell** — fixed-height layout where the toolbar scrolls independently and the keyboard stays centered, shrinking to fit the canvas (capped at 1×, never enlarged); stacks on narrow viewports
+- **Frame-ring selection feedback** — selection and press feedback are decoupled from the keycap fill: a 2px accent ring with a contrasting halo for selected keys, a faint ring on hover, and a geometric press (no color/brightness shift). New `--ws-accent` token on both themes
+- **Selection clears on outside click / Escape** — clicking empty canvas or pressing Escape clears the selection (and dismisses the hex badge)
+- **Keycap profile shading** — `Flat` (default, clean 2D), `SA`, `OEM`, `Cherry`, `DSA`; non-flat profiles render a layered cap (shaded sidewall, inset top surface, dish gradient, top-edge highlight) for a 3D look
+- **Auto-contrast legends** — legends default to per-key contrast (white on dark caps, black on light), fixing invisible legends on dark keycaps; also supports a fixed legend color and Top / Front placement
+- **Visual zone panel** — zone pills show each zone's current color as a swatch (or the mixed-color stripe pattern), and carry the accent frame when that zone is the active selection
+- **Expanded preset library** — 16 presets (added Gruvbox, Monokai, Catppuccin, Tokyo Night, Botanical, Modern Dolch, Mizu, Hammerhead), each with alpha/modifier/case mini-preview dots; the list is collapsible to save panel space
+- **Comparison mode** — two boards side by side (same layout): A is the live, editable colorway; B is a read-only reference sourced from Duplicate A, a saved slot (matching layout), or a preset
+- **JSON export bumped to v3** — adds `profile`, `legendColor`, `legendPosition`; import accepts v1/v2/v3 and default-fills missing fields, so older files still load
+- **Comparison PNG export** — exports both boards and both legends stacked, named `{a}-vs-{b}.png`
+
+### Changed
+- **Default keycap profile is `Flat`** — the clean 2D look ships by default (overriding the spec's `cherry`); 3D profiles are opt-in. In Flat mode legends keep the V1/V2 bottom-left placement; 3D profiles center them
+- **Selection no longer alters the fill** — the keycap fill now only ever shows the key's true color; the prior white-overlay / hover-brightness feedback was removed
+- **Legend color moved out of CSS** — set per key as an SVG attribute so auto-contrast can take effect
+- **Presets section collapsed by default** — a chevron toggle with a count keeps the 16-strong list from crowding the panel
+- **Legend picker uses a native swatch + Auto toggle** — the V2 "unified picker context" was never actually implemented (Case is a native input too), so a native control was used instead of retrofitting `ColorPanel`
+
+### Deferred to a later version
+- True per-row keycap sculpting (V3 ships a uniform per-profile look only)
+- Per-key / per-zone legend colors (one global legend color in V3)
+- Editable comparison board B, A↔B swap, cross-layout comparison
+- Keyboard mini-map glyphs on zone pills
+- URL-encoded colorway sharing; Undo / Redo
+
+---
+
 ## V2 — Enhanced UX
 
 **Theme:** Polish, intuitiveness, and shareability.

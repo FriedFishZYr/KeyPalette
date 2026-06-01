@@ -1,18 +1,25 @@
 import { useRef, useState } from 'react';
-import { exportPng } from '../../utils/exportPng.js';
+import { exportPng, exportComparisonPng } from '../../utils/exportPng.js';
 import { downloadColorway, deserializeColorway } from '../../utils/exportJson.js';
 import styles from './ExportPanel.module.css';
 
-export default function ExportPanel({ state, actions, keyboardRef }) {
+export default function ExportPanel({ state, actions, keyboardRef, comparisonRefB }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+
+  // In comparison mode with a B board set, export both boards (V3 §11).
+  const comparing = state.comparison?.active && state.comparison?.board;
 
   const handleExportPng = async () => {
     setError('');
     setBusy(true);
     try {
-      await exportPng(keyboardRef.current, state);
+      if (comparing) {
+        await exportComparisonPng(keyboardRef.current, comparisonRefB?.current, state);
+      } else {
+        await exportPng(keyboardRef.current, state);
+      }
     } catch (e) {
       console.error('PNG export failed:', e);
       setError(`PNG export failed: ${e?.message || e}`);
@@ -59,7 +66,7 @@ export default function ExportPanel({ state, actions, keyboardRef }) {
         onClick={handleExportPng}
         disabled={busy}
       >
-        {busy ? 'Exporting…' : 'Export PNG'}
+        {busy ? 'Exporting…' : comparing ? 'Export PNG (A vs B)' : 'Export PNG'}
       </button>
       <div className={styles.row}>
         <button type="button" className={styles.exportBtn} onClick={handleExportJson}>

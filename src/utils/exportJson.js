@@ -1,25 +1,31 @@
-// JSON import / export (V2 §9).
+// JSON import / export (V2 §9, V3 §10).
 //
-// serializeColorway builds the V2 export shape; deserializeColorway parses and
-// validates an imported file, throwing an Error with a user-facing message on
-// any failure so callers can show it inline.
+// serializeColorway builds the V3 export shape (version 3); deserializeColorway
+// parses, validates, and default-fills the V3 fields so v1/v2 files still
+// import. It throws an Error with a user-facing message on any failure so
+// callers can show it inline.
 
 const VALID_LAYOUTS = ['60', '65', '75', 'tkl', 'full'];
 
 export function serializeColorway(state) {
   return {
-    version: 2,
+    version: 3,
     name: state.colorwayName,
     layout: state.layout,
     caseColor: state.caseColor,
     caseFinish: state.caseFinish,
+    profile: state.profile,
+    legendColor: state.legendColor,
+    legendPosition: state.legendPosition,
     keyColors: { ...state.keyColors },
     exportedAt: new Date().toISOString(),
   };
 }
 
 // Accepts a JSON string or an already-parsed object. Returns the validated
-// data; throws Error(message) on invalid JSON or a failed validation check.
+// data with V3 fields default-filled; throws Error(message) on invalid JSON or
+// a failed validation check. Accepts version 1, 2, or 3 (older files lack the
+// V3 fields, which fall back to defaults).
 export function deserializeColorway(raw) {
   let data = raw;
   if (typeof raw === 'string') {
@@ -41,7 +47,12 @@ export function deserializeColorway(raw) {
   if (!data.keyColors || typeof data.keyColors !== 'object') {
     throw new Error('Missing or invalid "keyColors".');
   }
-  return data;
+  return {
+    ...data,
+    profile: data.profile ?? 'flat',
+    legendColor: data.legendColor ?? 'auto',
+    legendPosition: data.legendPosition ?? 'top',
+  };
 }
 
 // Serialize the current colorway and trigger a .json download.
