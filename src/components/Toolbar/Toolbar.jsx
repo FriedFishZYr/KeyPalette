@@ -26,6 +26,9 @@ export default function Toolbar({
 }) {
   // Presets collapse to keep the (now 16-strong) list from crowding the panel.
   const [presetsOpen, setPresetsOpen] = useState(false);
+  // Profile and Legends collapse the same way (V3.1) for visual coherence.
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [legendsOpen, setLegendsOpen] = useState(false);
 
   const comparison = state.comparison;
 
@@ -132,55 +135,91 @@ export default function Toolbar({
         </div>
       </div>
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Profile</h3>
-        <div className={styles.buttonGroup} role="group" aria-label="Keycap profile">
-          {PROFILE_ORDER.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={`${styles.btn} ${state.profile === id ? styles.btnActive : ''}`}
-              onClick={() => actions.setProfile(id)}
-              aria-pressed={state.profile === id}
-            >
-              {PROFILES[id].label}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          className={styles.sectionToggle}
+          onClick={() => setProfileOpen((v) => !v)}
+          aria-expanded={profileOpen}
+        >
+          <span className={styles.sectionTitle}>Profile</span>
+          <span className={styles.sectionMeta}>
+            <span className={styles.sectionCount}>
+              {PROFILES[state.profile]?.label ?? 'Flat'}
+            </span>
+            <span className={styles.sectionChevron} aria-hidden="true">
+              {profileOpen ? '▾' : '▸'}
+            </span>
+          </span>
+        </button>
+        {profileOpen && (
+          <div className={styles.buttonGroup} role="group" aria-label="Keycap profile">
+            {PROFILE_ORDER.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={`${styles.btn} ${state.profile === id ? styles.btnActive : ''}`}
+                onClick={() => actions.setProfile(id)}
+                aria-pressed={state.profile === id}
+              >
+                {PROFILES[id].label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Legends</h3>
-        <div className={styles.caseColorRow}>
-          <input
-            type="color"
-            className={styles.caseSwatch}
-            value={state.legendColor === 'auto' ? '#cccccc' : state.legendColor}
-            onChange={(e) => actions.setLegendColor(e.target.value)}
-            aria-label="Legend color"
-            title="Legend color"
-          />
-          <button
-            type="button"
-            className={`${styles.autoBtn} ${state.legendColor === 'auto' ? styles.autoBtnActive : ''}`}
-            onClick={() => actions.setLegendColor('auto')}
-            aria-pressed={state.legendColor === 'auto'}
-            title="Auto-contrast legend per key"
-          >
-            Auto
-          </button>
-        </div>
-        <div className={styles.segmented} role="group" aria-label="Legend position">
-          {LEGEND_POSITIONS.map((pos) => (
-            <button
-              key={pos}
-              type="button"
-              className={`${styles.segmentBtn} ${state.legendPosition === pos ? styles.segmentBtnActive : ''}`}
-              onClick={() => actions.setLegendPosition(pos)}
-              aria-pressed={state.legendPosition === pos}
-            >
-              {pos}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          className={styles.sectionToggle}
+          onClick={() => setLegendsOpen((v) => !v)}
+          aria-expanded={legendsOpen}
+        >
+          <span className={styles.sectionTitle}>Legends</span>
+          <span className={styles.sectionMeta}>
+            <span className={styles.sectionCount}>
+              {state.legendColor === 'auto' ? 'Auto' : state.legendColor} · {state.legendPosition}
+            </span>
+            <span className={styles.sectionChevron} aria-hidden="true">
+              {legendsOpen ? '▾' : '▸'}
+            </span>
+          </span>
+        </button>
+        {legendsOpen && (
+          <>
+            <div className={styles.caseColorRow}>
+              <input
+                type="color"
+                className={styles.caseSwatch}
+                value={state.legendColor === 'auto' ? '#cccccc' : state.legendColor}
+                onChange={(e) => actions.setLegendColor(e.target.value)}
+                aria-label="Legend color"
+                title="Legend color"
+              />
+              <button
+                type="button"
+                className={`${styles.autoBtn} ${state.legendColor === 'auto' ? styles.autoBtnActive : ''}`}
+                onClick={() => actions.setLegendColor('auto')}
+                aria-pressed={state.legendColor === 'auto'}
+                title="Auto-contrast legend per key"
+              >
+                Auto
+              </button>
+            </div>
+            <div className={styles.segmented} role="group" aria-label="Legend position">
+              {LEGEND_POSITIONS.map((pos) => (
+                <button
+                  key={pos}
+                  type="button"
+                  className={`${styles.segmentBtn} ${state.legendPosition === pos ? styles.segmentBtnActive : ''}`}
+                  onClick={() => actions.setLegendPosition(pos)}
+                  aria-pressed={state.legendPosition === pos}
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Comparison</h3>

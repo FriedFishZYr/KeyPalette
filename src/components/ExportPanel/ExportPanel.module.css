@@ -13,6 +13,30 @@
   color: var(--ws-label-muted);
 }
 
+/* Collapsible header (V3.1) — mirrors the Toolbar section toggle. */
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sectionChevron {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--ws-label-muted);
+  transition: color 120ms ease;
+}
+
+.sectionToggle:hover .sectionTitle,
+.sectionToggle:hover .sectionChevron {
+  color: var(--ws-label);
+}
+
 .exportBtn {
   width: 100%;
   padding: 8px;

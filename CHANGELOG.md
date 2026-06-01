@@ -14,7 +14,8 @@
 - **Keycap profile shading** — `Flat` (default, clean 2D), `SA`, `OEM`, `Cherry`, `DSA`; non-flat profiles render a layered cap (shaded sidewall, inset top surface, dish gradient, top-edge highlight) for a 3D look
 - **Auto-contrast legends** — legends default to per-key contrast (white on dark caps, black on light), fixing invisible legends on dark keycaps; also supports a fixed legend color and Top / Front placement
 - **Visual zone panel** — zone pills show each zone's current color as a swatch (or the mixed-color stripe pattern), and carry the accent frame when that zone is the active selection
-- **Expanded preset library** — 16 presets (added Gruvbox, Monokai, Catppuccin, Tokyo Night, Botanical, Modern Dolch, Mizu, Hammerhead), each with alpha/modifier/case mini-preview dots; the list is collapsible to save panel space
+- **Expanded preset library** — 16 presets (added Gruvbox, Monokai, Catppuccin, Tokyo Night, Botanical, Modern Dolch, Mizu, Hammerhead), each with alpha/modifier/case mini-preview dots
+- **Collapsible toolbar sections** — Presets, Profile, Legends, and Export collapse behind a chevron header (default collapsed) to keep the panel tidy; each header shows the active value where there is one (preset count, current profile, legend color/position)
 - **Comparison mode** — two boards side by side (same layout): A is the live, editable colorway; B is a read-only reference sourced from Duplicate A, a saved slot (matching layout), or a preset
 - **JSON export bumped to v3** — adds `profile`, `legendColor`, `legendPosition`; import accepts v1/v2/v3 and default-fills missing fields, so older files still load
 - **Comparison PNG export** — exports both boards and both legends stacked, named `{a}-vs-{b}.png`

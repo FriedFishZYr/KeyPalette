@@ -6,6 +6,7 @@ import styles from './ExportPanel.module.css';
 export default function ExportPanel({ state, actions, keyboardRef, comparisonRefB }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   // In comparison mode with a B board set, export both boards (V3 §11).
@@ -59,31 +60,45 @@ export default function ExportPanel({ state, actions, keyboardRef, comparisonRef
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Export</h3>
       <button
         type="button"
-        className={styles.exportBtn}
-        onClick={handleExportPng}
-        disabled={busy}
+        className={styles.sectionToggle}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
       >
-        {busy ? 'Exporting…' : comparing ? 'Export PNG (A vs B)' : 'Export PNG'}
+        <span className={styles.sectionTitle}>Export</span>
+        <span className={styles.sectionChevron} aria-hidden="true">
+          {open ? '▾' : '▸'}
+        </span>
       </button>
-      <div className={styles.row}>
-        <button type="button" className={styles.exportBtn} onClick={handleExportJson}>
-          Export JSON
-        </button>
-        <button type="button" className={styles.exportBtn} onClick={handleImportClick}>
-          Import JSON
-        </button>
-      </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
-      {error && <p className={styles.error} role="alert">{error}</p>}
+      {open && (
+        <>
+          <button
+            type="button"
+            className={styles.exportBtn}
+            onClick={handleExportPng}
+            disabled={busy}
+          >
+            {busy ? 'Exporting…' : comparing ? 'Export PNG (A vs B)' : 'Export PNG'}
+          </button>
+          <div className={styles.row}>
+            <button type="button" className={styles.exportBtn} onClick={handleExportJson}>
+              Export JSON
+            </button>
+            <button type="button" className={styles.exportBtn} onClick={handleImportClick}>
+              Import JSON
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+          {error && <p className={styles.error} role="alert">{error}</p>}
+        </>
+      )}
     </div>
   );
 }
