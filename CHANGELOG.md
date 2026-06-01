@@ -2,7 +2,7 @@
 
 ---
 
-## V2 — Enhanced UX _(in progress)_
+## V2 — Enhanced UX
 
 **Theme:** Polish, intuitiveness, and shareability.
 
@@ -18,6 +18,7 @@
 - **Colorway presets** — 8 named starter colorways: WoB, BoW, Miami, Nord, Dracula, Solarized, Olive, Carbon
 - **PNG export with color legend** — exports keyboard render + a per-zone color legend (zone name, swatch, hex, key count)
 - **JSON export / import** — serialize and share full colorway state as a `.json` file; import validates structure before applying
+- **Hex badge** — selecting exactly one key shows a click-to-copy hex pill below it on the canvas, tracking the key through responsive scaling
 - **Workspace contrast polish** — precise dark/light mode color tokens; key borders ensure light keycaps are always visible; smooth fill color transitions
 
 ### Changed

@@ -6,7 +6,13 @@ import styles from './Keyboard.module.css';
 const UNIT = 54;
 const CASE_PADDING = 8;
 
-export default function Keyboard({ state, actions, svgRef }) {
+export default function Keyboard({
+  state,
+  actions,
+  svgRef,
+  availableWidth = 0,
+  availableHeight = 0,
+}) {
   const keys = layouts[state.layout] ?? [];
 
   const maxX = Math.max(...keys.map((k) => k.x + k.w));
@@ -17,6 +23,14 @@ export default function Keyboard({ state, actions, svgRef }) {
   const svgW = boardW + CASE_PADDING * 2;
   const svgH = boardH + CASE_PADDING * 2;
   const filterId = 'case-shadow';
+
+  // Scale-to-fit: shrink the board to fit the canvas region on either axis,
+  // capped at 1 (never enlarge beyond native). Falls back to 1 until the
+  // ResizeObserver in App has reported the region size.
+  const fitScale =
+    availableWidth > 0 && availableHeight > 0
+      ? Math.min(1, availableWidth / svgW, availableHeight / svgH)
+      : 1;
 
   // Hex badge (V2 §10): only when exactly one key is selected. Positioned as a
   // percentage of the wrapper so it tracks the key even when the responsive
@@ -34,7 +48,11 @@ export default function Keyboard({ state, actions, svgRef }) {
     : 0;
 
   return (
-    <div className={styles.boardWrap} ref={svgRef}>
+    <div
+      className={styles.boardWrap}
+      ref={svgRef}
+      style={{ transform: `scale(${fitScale})` }}
+    >
     <svg
       className={styles.keyboard}
       width={svgW}

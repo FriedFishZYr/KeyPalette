@@ -3,12 +3,27 @@
   flex-direction: column;
   gap: 20px;
   width: 260px;
+  flex-shrink: 0;
+  /* Full-height column that scrolls on its own (V3 §2); the page never does. */
+  height: 100%;
   padding: 16px;
+  box-sizing: border-box;
   overflow-y: auto;
   background: var(--ws-panel);
   border-right: 1px solid var(--ws-panel-border);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* Stacked layout on narrow viewports: full-width, no independent scroll. */
+@media (max-width: 768px) {
+  .toolbar {
+    width: 100%;
+    height: auto;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--ws-panel-border);
+  }
 }
 
 .section {

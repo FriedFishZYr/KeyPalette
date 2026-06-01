@@ -55,3 +55,48 @@ export function hslToRgb({ h, s, l }) {
 export function isValidHex(str) {
   return /^#[0-9a-fA-F]{6}$/.test(str);
 }
+
+/* ── V3 color math ────────────────────────────────────────────────── */
+
+// WCAG-style relative luminance, 0–1. Linearizes each channel first.
+export function luminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const toLinear = (c) => {
+    const cs = c / 255;
+    return cs <= 0.03928 ? cs / 12.92 : Math.pow((cs + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+// Linear RGB mix between two colors. t = 0 → hexA, t = 1 → hexB.
+export function mix(hexA, hexB, t) {
+  const a = hexToRgb(hexA);
+  const b = hexToRgb(hexB);
+  const tt = Math.max(0, Math.min(1, t));
+  return rgbToHex({
+    r: a.r + (b.r - a.r) * tt,
+    g: a.g + (b.g - a.g) * tt,
+    b: a.b + (b.b - a.b) * tt,
+  });
+}
+
+// Mix toward white by frac (0–1).
+export function lighten(hex, frac) {
+  return mix(hex, '#ffffff', frac);
+}
+
+// Mix toward black by frac (0–1).
+export function darken(hex, frac) {
+  return mix(hex, '#000000', frac);
+}
+
+// Luminance-aware: darken light colors, lighten dark colors. Keeps shading
+// visible regardless of the base color (used for keycap sidewalls/dish).
+export function shadeTowardContrast(hex, frac) {
+  return luminance(hex) > 0.5 ? darken(hex, frac) : lighten(hex, frac);
+}
+
+// Black or white, whichever reads better on the given background.
+export function contrastText(hex) {
+  return luminance(hex) > 0.5 ? '#000000' : '#ffffff';
+}

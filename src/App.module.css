@@ -1,6 +1,9 @@
 .app {
   display: flex;
-  min-height: 100vh;
+  /* Fixed-height shell (V3 §2): the page itself never scrolls. The toolbar
+     scrolls on its own; the canvas region stays put and scales to fit. */
+  height: 100vh;
+  overflow: hidden;
   font-family: system-ui, -apple-system, sans-serif;
   background: var(--ws-bg);
   color: var(--ws-label);
@@ -47,7 +50,30 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  overflow: auto;
+  /* min-* 0 lets this flex child shrink below its content size so the
+     ResizeObserver reports the true available space; overflow hidden keeps
+     the page-level scroll from returning when the scaled board still overflows
+     its (unscaled) layout box. */
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Responsive stacking ──────────────────────────────────────────── */
+/* Narrow viewports collapse to a stacked layout (toolbar above canvas) with
+   normal page scroll — desktop-primary, same posture as V1/V2. */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .main {
+    overflow: visible;
+    min-height: 50vh;
+  }
 }
 
 /* ── Reset body margin ────────────────────────────────────────────── */

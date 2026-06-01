@@ -2,6 +2,9 @@
   position: relative;
   display: inline-block;
   line-height: 0;
+  /* Scale-to-fit (V3 §2) is applied as transform: scale() from the center,
+     so the board shrinks to fit the canvas region while staying centered. */
+  transform-origin: center center;
 }
 
 /* ── Hex badge (V2 §10) ───────────────────────────────────────────── */
@@ -28,8 +31,6 @@
 
 .keyboard {
   display: block;
-  max-width: 100%;
-  height: auto;
 }
 
 /* ── KeyCap ───────────────────────────────────────────────────────── */

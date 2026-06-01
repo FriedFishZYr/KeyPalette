@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import useColorway from './hooks/useColorway.js';
 import Keyboard from './components/Keyboard/Keyboard.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
@@ -11,6 +11,23 @@ export default function App() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const keyboardRef = useRef(null);
 
+  // Scale-to-fit: measure the canvas region's content box so Keyboard can
+  // shrink the board to fit without clipping (capped at 1x). No new colorway
+  // state — this is derived purely from container size + current layout.
+  const mainRef = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setCanvasSize({ width, height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <div className={styles.app} data-workspace={state.workspace}>
       <WorkspaceToggle workspace={state.workspace} onToggle={actions.setWorkspace} />
@@ -20,8 +37,14 @@ export default function App() {
         keyboardRef={keyboardRef}
         onExtractFromImage={() => setImageModalOpen(true)}
       />
-      <main className={styles.main}>
-        <Keyboard state={state} actions={actions} svgRef={keyboardRef} />
+      <main className={styles.main} ref={mainRef}>
+        <Keyboard
+          state={state}
+          actions={actions}
+          svgRef={keyboardRef}
+          availableWidth={canvasSize.width}
+          availableHeight={canvasSize.height}
+        />
       </main>
       {imageModalOpen && (
         <ImagePaletteModal
