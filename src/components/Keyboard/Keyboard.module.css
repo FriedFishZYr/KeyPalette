@@ -55,6 +55,13 @@
   transition: fill 150ms ease;
 }
 
+/* Top-edge highlight on the keycap top surface (V3 §5). */
+.topEdge {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
 .keyLabel {
   /* fill is set per key in KeyCap.jsx (auto-contrast, V3 §6) — keep it out of
      CSS so the presentation attribute isn't overridden by the stylesheet. */

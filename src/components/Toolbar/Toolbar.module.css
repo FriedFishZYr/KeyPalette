@@ -256,6 +256,39 @@
   color: var(--ws-label);
 }
 
+/* ── Legend "Auto" toggle (V3 §6) ─────────────────────────────────── */
+.autoBtn {
+  padding: 6px 14px;
+  border: 1px solid var(--ws-input-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ws-label-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.autoBtn:hover {
+  color: var(--ws-label);
+  border-color: var(--ws-label-muted);
+  background: var(--surface-hover);
+}
+
+.autoBtnActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.autoBtnActive:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .segmented {
   display: flex;
   margin-top: 8px;

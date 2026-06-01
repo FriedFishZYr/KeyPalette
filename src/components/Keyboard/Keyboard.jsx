@@ -1,4 +1,5 @@
 import layouts from '../../data/layouts/index.js';
+import { PROFILES } from '../../data/profiles.js';
 import KeyCap from './KeyCap.jsx';
 import Case, { CaseFilter } from './Case.jsx';
 import styles from './Keyboard.module.css';
@@ -23,6 +24,10 @@ export default function Keyboard({
   const svgW = boardW + CASE_PADDING * 2;
   const svgH = boardH + CASE_PADDING * 2;
   const filterId = 'case-shadow';
+
+  // Active keycap profile (V3 §5). The dish gradient is declared once below
+  // using this profile's strength, then mapped to each key's top surface.
+  const profile = PROFILES[state.profile] ?? PROFILES.cherry;
 
   // Scale-to-fit: shrink the board to fit the canvas region on either axis,
   // capped at 1 (never enlarge beyond native). Falls back to 1 until the
@@ -61,19 +66,24 @@ export default function Keyboard({
     >
       <defs>
         <CaseFilter id={filterId} caseFinish={state.caseFinish} />
-        {/* Subtle inner shadow for keycap depth */}
-        <filter id="key-depth" x="-5%" y="-5%" width="110%" height="115%">
-          <feComponentTransfer in="SourceAlpha" result="shadow-alpha">
-            <feFuncA type="linear" slope="0.15" />
-          </feComponentTransfer>
-          <feOffset dx={0} dy={1.5} in="shadow-alpha" result="offset" />
-          <feGaussianBlur in="offset" stdDeviation={1} result="blur" />
-          <feComposite in="blur" in2="SourceGraphic" operator="in" result="inner" />
-          <feMerge>
-            <feMergeNode in="SourceGraphic" />
-            <feMergeNode in="inner" />
-          </feMerge>
-        </filter>
+        {/* Dish overlay (V3 §5): a color-independent light→neutral→dark gradient
+            declared once and reused by every key. Cylindrical = vertical
+            (lighter top, darker bottom); spherical = radial (lighter center,
+            darker edges). Strength comes from the active profile. */}
+        {profile.dish === 'cylindrical' && (
+          <linearGradient id="key-dish" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={profile.dishStrength} />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="100%" stopColor="#000000" stopOpacity={profile.dishStrength} />
+          </linearGradient>
+        )}
+        {profile.dish === 'spherical' && (
+          <radialGradient id="key-dish" cx="50%" cy="42%" r="62%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={profile.dishStrength} />
+            <stop offset="55%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="100%" stopColor="#000000" stopOpacity={profile.dishStrength} />
+          </radialGradient>
+        )}
         {/* Lifted shadow for selected keys */}
         <filter id="key-lift" x="-10%" y="-10%" width="120%" height="130%">
           <feDropShadow dx={0} dy={3} stdDeviation={4} floodColor="#000" floodOpacity={0.3} />
@@ -94,6 +104,9 @@ export default function Keyboard({
           color={state.keyColors[k.id] ?? '#e0e0e0'}
           selected={state.selectedKeys.includes(k.id)}
           onClick={actions.toggleKeySelected}
+          profile={profile}
+          legendColor={state.legendColor}
+          legendPosition={state.legendPosition}
         />
       ))}
     </svg>

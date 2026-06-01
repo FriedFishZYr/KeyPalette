@@ -11,6 +11,10 @@ const DEFAULT_STATE = {
   activeColor: '#cccccc',
   colorwayName: 'Untitled',
   workspace: 'dark',
+  // V3 additions:
+  profile: 'flat', // "flat" (default, clean 2D) | "sa" | "oem" | "cherry" | "dsa"
+  legendColor: 'auto', // "auto" | "#rrggbb"
+  legendPosition: 'top', // "top" | "front"
 };
 
 const STORAGE_KEY = 'keypalette-slots';
@@ -51,7 +55,15 @@ export default function useColorway() {
   const slot = slots[active] ?? { ...DEFAULT_STATE };
   // colorHistory lives in its own localStorage key but is surfaced on the
   // state object so consumers can read it like any other field.
-  const state = { ...slot, colorHistory };
+  // V3 fields are default-filled here so pre-V3 slots (saved without them)
+  // load cleanly; full persistence/round-trip is handled in step 10.
+  const state = {
+    ...slot,
+    profile: slot.profile ?? 'flat',
+    legendColor: slot.legendColor ?? 'auto',
+    legendPosition: slot.legendPosition ?? 'top',
+    colorHistory,
+  };
 
   // Always points at the latest committed state so event handlers can read
   // fresh values without re-creating callbacks on every render.
@@ -202,6 +214,17 @@ export default function useColorway() {
     [update],
   );
 
+  // V3 §5 / §6 board-wide visual settings.
+  const setProfile = useCallback((profile) => update({ profile }), [update]);
+  const setLegendColor = useCallback(
+    (legendColor) => update({ legendColor }),
+    [update],
+  );
+  const setLegendPosition = useCallback(
+    (legendPosition) => update({ legendPosition }),
+    [update],
+  );
+
   const resetSelectedKeys = useCallback(() => {
     setStore((prev) => {
       const p = typeof prev === 'function' ? prev() : prev;
@@ -340,6 +363,9 @@ export default function useColorway() {
       setCaseColor,
       setCaseFinish,
       setWorkspace,
+      setProfile,
+      setLegendColor,
+      setLegendPosition,
       resetSelectedKeys,
       resetAll,
       applyPreset,
@@ -353,6 +379,7 @@ export default function useColorway() {
     [
       setLayout, setActiveColor, applyColorToSelected, toggleKeySelected,
       clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
+      setProfile, setLegendColor, setLegendPosition,
       resetSelectedKeys, resetAll, applyPreset, importColorway,
       addColorsToHistory, clearColorHistory,
       saveSlot, loadSlot, createSlot,
