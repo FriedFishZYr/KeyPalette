@@ -2,6 +2,21 @@
 
 ---
 
+## Editor refinement — Unreleased
+
+- Preserves the existing neutral workspace and keyboard rendering while grouping editing controls into Keycaps, Case, and Lettering.
+- Adds a compact project bar with an editable design name, local save feedback, My designs, Presets, Compare, and Download.
+- Exposes the existing five local design slots through create/open controls.
+- Adds 50-step Undo/Redo per design for the current session, including keyboard shortcuts. Selection, picker drafts, and workspace appearance do not enter history. Continuous name/case/lettering edits are grouped until the field loses focus.
+- Shows selection counts, an All keys group, and one color input format at a time. “Typing keys” accurately includes letters, punctuation, and space.
+- Opens presets, downloads, and image palettes in keyboard-accessible native dialogs. Image palette actions now say what they do.
+- Shows the keyboard before editing controls on narrow screens.
+- Validates editable design files before applying them; imported designs remain undoable. Existing v1/v2/v3 files are supported.
+- Corrects comparison layout boxes and isolates SVG filters per board. Selection badges are excluded from PNG exports.
+- Adds dependency-free tests for history and editable design file validation (`npm test`).
+
+---
+
 ## V3 — Visual Fidelity & Comparison
 
 **Theme:** Make the board look like real keycaps, keep it front-and-center while you work, sharpen the selection model, and add side-by-side comparison. Additive only — all V1/V2 behavior preserved. Zero new dependencies.

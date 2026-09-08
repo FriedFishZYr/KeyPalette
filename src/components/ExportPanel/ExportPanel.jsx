@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import Dialog from '../Dialog.jsx';
 import { exportPng, exportComparisonPng } from '../../utils/exportPng.js';
 import { downloadColorway, deserializeColorway } from '../../utils/exportJson.js';
 import styles from './ExportPanel.module.css';
@@ -50,55 +51,33 @@ export default function ExportPanel({ state, actions, keyboardRef, comparisonRef
     if (!file) return;
     setError('');
     try {
+      if (file.size > 2 * 1024 * 1024) throw new Error('This file is too large. Choose a design file under 2 MB.');
       const text = await file.text();
       const data = deserializeColorway(text);
       actions.importColorway(data);
+      setOpen(false);
     } catch (err) {
       setError(err?.message || 'Import failed.');
     }
   };
 
   return (
-    <div className={styles.section}>
-      <button
-        type="button"
-        className={styles.sectionToggle}
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        <span className={styles.sectionTitle}>Export</span>
-        <span className={styles.sectionChevron} aria-hidden="true">
-          {open ? '▾' : '▸'}
-        </span>
-      </button>
-      {open && (
-        <>
-          <button
-            type="button"
-            className={styles.exportBtn}
-            onClick={handleExportPng}
-            disabled={busy}
-          >
-            {busy ? 'Exporting…' : comparing ? 'Export PNG (A vs B)' : 'Export PNG'}
+    <>
+      <button type="button" className={styles.download} onClick={() => setOpen(true)}>Download</button>
+      {open && <Dialog title="Download design" onClose={() => setOpen(false)}>
+        <div className={styles.section}>
+          <p className={styles.hint}>Save an image to share, or an editable design to reopen later.</p>
+          <button type="button" className={styles.exportBtn} onClick={handleExportPng} disabled={busy}>
+            {busy ? 'Preparing image…' : comparing ? 'Download comparison image · PNG' : 'Download image · PNG'}
           </button>
-          <div className={styles.row}>
-            <button type="button" className={styles.exportBtn} onClick={handleExportJson}>
-              Export JSON
-            </button>
-            <button type="button" className={styles.exportBtn} onClick={handleImportClick}>
-              Import JSON
-            </button>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
+          <button type="button" className={styles.exportBtn} onClick={handleExportJson}>Download editable design · JSON</button>
+          <hr className={styles.divider} />
+          <button type="button" className={styles.exportBtn} onClick={handleImportClick}>Open a design file…</button>
+          <p className={styles.hint}>Opening a file replaces this design. Undo restores the previous version.</p>
+          <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
           {error && <p className={styles.error} role="alert">{error}</p>}
-        </>
-      )}
-    </div>
+        </div>
+      </Dialog>}
+    </>
   );
 }

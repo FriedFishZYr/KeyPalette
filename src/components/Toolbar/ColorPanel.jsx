@@ -8,7 +8,7 @@ export default function ColorPanel({
   onColorChange,
   onApply,
   onResetSelected,
-  hasSelection,
+  selectionCount = 0,
   colorHistory = [],
   onClearHistory,
 }) {
@@ -16,6 +16,8 @@ export default function ColorPanel({
   // differing colors. The picker/inputs fall back to a neutral color so they
   // don't parse null; picking anything calls onColorChange, which clears the
   // mixed state, after which Apply sets every selected key uniformly.
+  const [format, setFormat] = useState('hex');
+  const hasSelection = selectionCount > 0;
   const isMixed = activeColor === null;
   const displayColor = activeColor ?? '#e0e0e0';
   const [hexInput, setHexInput] = useState(displayColor);
@@ -47,7 +49,7 @@ export default function ColorPanel({
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Color</h3>
+      <h3 className={styles.sectionTitle}>Keycap color</h3>
       {isMixed ? (
         <>
           <div className={styles.mixedSwatch} aria-hidden="true" />
@@ -58,6 +60,80 @@ export default function ColorPanel({
       )}
       <HexColorPicker color={displayColor} onChange={onColorChange} />
 
+      <div className={styles.colorInputs} data-format={format}>
+        <label className={styles.colorField}>
+          <span>Format</span>
+          <select aria-label="Color format" className={styles.input} value={format} onChange={(event) => setFormat(event.target.value)}>
+            <option value="hex">Hex</option><option value="rgb">RGB</option><option value="hsl">HSL</option>
+          </select>
+        </label>
+        {format === 'hex' && <label className={styles.colorField}>
+          <span>Hex</span>
+          <input
+            type="text"
+            value={hexInput}
+            onChange={(e) => handleHexInput(e.target.value)}
+            maxLength={7}
+            aria-invalid={!isValidHex(hexInput)}
+            onBlur={() => { if (!isValidHex(hexInput)) setHexInput(displayColor); }}
+            className={styles.input}
+          />
+        </label>}
+
+        {format === 'rgb' && <div className={styles.colorRow}>
+          {['r', 'g', 'b'].map((ch) => (
+            <label key={ch} className={styles.colorField}>
+              <span>{ch.toUpperCase()}</span>
+              <input
+                type="number"
+                min={0}
+                max={255}
+                value={rgb[ch]}
+                onChange={(e) => handleRgbChange(ch, e.target.value)}
+                className={styles.input}
+              />
+            </label>
+          ))}
+        </div>}
+
+        {format === 'hsl' && <div className={styles.colorRow}>
+          {[
+            { ch: 'h', max: 360 },
+            { ch: 's', max: 100 },
+            { ch: 'l', max: 100 },
+          ].map(({ ch, max }) => (
+            <label key={ch} className={styles.colorField}>
+              <span>{ch.toUpperCase()}</span>
+              <input
+                type="number"
+                min={0}
+                max={max}
+                value={hsl[ch]}
+                onChange={(e) => handleHslChange(ch, e.target.value)}
+                className={styles.input}
+              />
+            </label>
+          ))}
+        </div>}
+      </div>
+
+      <div className={styles.actionRow}>
+        <button
+          className={`${styles.btn} ${styles.applyBtn}`}
+          onClick={onApply}
+          disabled={!hasSelection || isMixed || (format === 'hex' && !isValidHex(hexInput))}
+        >
+          {hasSelection ? `Apply to ${selectionCount} ${selectionCount === 1 ? 'key' : 'keys'}` : 'Select keys to apply'}
+        </button>
+        <button
+          className={styles.resetSelectedBtn}
+          onClick={onResetSelected}
+          disabled={!hasSelection}
+          title="Reset selected keys to default color"
+        >
+          Reset
+        </button>
+      </div>
       {colorHistory.length > 0 && (
         <div className={styles.history}>
           <div className={styles.historyHeader}>
@@ -86,72 +162,6 @@ export default function ColorPanel({
         </div>
       )}
 
-      <div className={styles.colorInputs}>
-        <label className={styles.colorField}>
-          <span>Hex</span>
-          <input
-            type="text"
-            value={hexInput}
-            onChange={(e) => handleHexInput(e.target.value)}
-            maxLength={7}
-            className={styles.input}
-          />
-        </label>
-
-        <div className={styles.colorRow}>
-          {['r', 'g', 'b'].map((ch) => (
-            <label key={ch} className={styles.colorField}>
-              <span>{ch.toUpperCase()}</span>
-              <input
-                type="number"
-                min={0}
-                max={255}
-                value={rgb[ch]}
-                onChange={(e) => handleRgbChange(ch, e.target.value)}
-                className={styles.input}
-              />
-            </label>
-          ))}
-        </div>
-
-        <div className={styles.colorRow}>
-          {[
-            { ch: 'h', max: 360 },
-            { ch: 's', max: 100 },
-            { ch: 'l', max: 100 },
-          ].map(({ ch, max }) => (
-            <label key={ch} className={styles.colorField}>
-              <span>{ch.toUpperCase()}</span>
-              <input
-                type="number"
-                min={0}
-                max={max}
-                value={hsl[ch]}
-                onChange={(e) => handleHslChange(ch, e.target.value)}
-                className={styles.input}
-              />
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className={styles.actionRow}>
-        <button
-          className={`${styles.btn} ${styles.applyBtn}`}
-          onClick={onApply}
-          disabled={!hasSelection}
-        >
-          Apply to Selected
-        </button>
-        <button
-          className={styles.resetSelectedBtn}
-          onClick={onResetSelected}
-          disabled={!hasSelection}
-          title="Reset selected keys to default color"
-        >
-          Reset
-        </button>
-      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { extractPalette } from '../../utils/extractPalette.js';
 import styles from './ImagePaletteModal.module.css';
+import Dialog from '../Dialog.jsx';
 
 export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }) {
   const [thumbUrl, setThumbUrl] = useState(null);
@@ -15,14 +16,6 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
       if (thumbUrl) URL.revokeObjectURL(thumbUrl);
     };
   }, [thumbUrl]);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
 
   const handleFile = async (file) => {
     if (!file || !file.type.startsWith('image/')) {
@@ -59,17 +52,11 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
   };
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div
-        className={styles.modal}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Extract palette from image"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog title="Add colors from an image" onClose={onClose}>
         <div className={styles.body}>
           <div className={styles.left}>
-            <div
+            <button
+              type="button"
               className={styles.dropZone}
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
@@ -82,7 +69,7 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
                   Drop an image here, or click to browse
                 </span>
               )}
-            </div>
+            </button>
             <input
               ref={fileInputRef}
               type="file"
@@ -129,11 +116,10 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
               className={styles.applyAllBtn}
               onClick={() => onApplyAll(palette)}
             >
-              Apply all
+              Add colors to palette
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

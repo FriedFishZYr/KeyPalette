@@ -2,9 +2,8 @@
   position: relative;
   display: inline-block;
   line-height: 0;
-  /* Scale-to-fit (V3 §2) is applied as transform: scale() from the center,
-     so the board shrinks to fit the canvas region while staying centered. */
-  transform-origin: center center;
+  /* The SVG viewport scales the board, so its layout box matches the visible
+     dimensions and comparison labels stay next to their boards. */
 }
 
 /* ── Hex badge (V2 §10) ───────────────────────────────────────────── */
@@ -104,9 +103,7 @@
 
 /* ── WorkspaceToggle ──────────────────────────────────────────────── */
 .workspaceToggle {
-  position: fixed;
-  top: 14px;
-  right: 16px;
+  position: relative;
   width: 32px;
   height: 32px;
   border: 1px solid var(--ws-panel-border);
@@ -125,3 +122,5 @@
 .workspaceToggle:hover {
   background: var(--surface-hover);
 }
+.keycap:focus-visible { outline: none; }
+.keycap:focus-visible .keyRect { stroke: var(--ws-accent); stroke-width: 3px; }

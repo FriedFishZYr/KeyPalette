@@ -2,312 +2,112 @@ import { useState } from 'react';
 import LayoutSelector from './LayoutSelector.jsx';
 import ZonePanel from './ZonePanel.jsx';
 import ColorPanel from './ColorPanel.jsx';
-import ExportPanel from '../ExportPanel/ExportPanel.jsx';
 import presets from '../../data/presets.js';
 import { PROFILES, PROFILE_ORDER } from '../../data/profiles.js';
-import { DEFAULT_KEY_COLOR } from '../../hooks/useColorway.js';
 import styles from './Toolbar.module.css';
 
-const LEGEND_POSITIONS = ['top', 'front'];
+const TABS = ['Keycaps', 'Case', 'Lettering'];
 
-const RESET_ALL_PROMPT =
-  'Reset every key to the default color and the case to black?\n\n' +
-  'Layout, workspace, and saved slots are kept.';
-
-const CASE_FINISHES = ['matte', 'gloss'];
-
-export default function Toolbar({
-  state,
-  actions,
-  slots = [],
-  keyboardRef,
-  comparisonRefB,
-  onExtractFromImage,
-}) {
-  // Presets collapse to keep the (now 16-strong) list from crowding the panel.
-  const [presetsOpen, setPresetsOpen] = useState(false);
-  // Profile and Legends collapse the same way (V3.1) for visual coherence.
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [legendsOpen, setLegendsOpen] = useState(false);
-
-  const comparison = state.comparison;
-
-  const handleResetAll = () => {
-    if (window.confirm(RESET_ALL_PROMPT)) {
-      actions.resetAll();
-    }
-  };
-
-  const handlePreset = (preset) => {
-    const hasCustomColors = Object.values(state.keyColors).some(
-      (c) => c !== DEFAULT_KEY_COLOR,
-    );
-    if (
-      !hasCustomColors ||
-      window.confirm(
-        `Load the "${preset.name}" preset? This replaces your current key colors and case.`,
-      )
-    ) {
-      actions.applyPreset(preset);
-    }
-  };
-
+export default function Toolbar({ state, actions, slots = [], onExtractFromImage }) {
+  const [tab, setTab] = useState('Keycaps');
+  const count = state.selectedKeys.length;
   return (
-    <aside className={styles.toolbar}>
+    <aside className={styles.toolbar} aria-label="Keyboard editor">
       <LayoutSelector current={state.layout} onSelect={actions.setLayout} />
-      <div className={styles.section}>
-        <button
-          type="button"
-          className={styles.sectionToggle}
-          onClick={() => setPresetsOpen((v) => !v)}
-          aria-expanded={presetsOpen}
-        >
-          <span className={styles.sectionTitle}>Presets</span>
-          <span className={styles.sectionMeta}>
-            <span className={styles.sectionCount}>{presets.length}</span>
-            <span className={styles.sectionChevron} aria-hidden="true">
-              {presetsOpen ? '▾' : '▸'}
-            </span>
-          </span>
-        </button>
-        {presetsOpen && (
-          <div className={styles.presetGroup}>
-            {presets.map((preset) => (
-              <button
-                key={preset.name}
-                type="button"
-                className={styles.presetPill}
-                onClick={() => handlePreset(preset)}
-              >
-                <span className={styles.presetDots} aria-hidden="true">
-                  <span className={styles.presetDot} style={{ background: preset.zones.alpha }} />
-                  <span className={styles.presetDot} style={{ background: preset.zones.modifier }} />
-                  <span className={styles.presetDot} style={{ background: preset.caseColor }} />
-                </span>
-                {preset.name}
-              </button>
-            ))}
+      <div className={styles.editorTabs} role="tablist" aria-label="Edit keyboard">
+        {TABS.map((label, index) => (
+          <button key={label} type="button" role="tab" id={`editor-tab-${label}`}
+            aria-selected={tab === label} aria-controls="editor-panel" tabIndex={tab === label ? 0 : -1}
+            onClick={() => setTab(label)}
+            onKeyDown={(event) => {
+              const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+              if (!offset && !['Home', 'End'].includes(event.key)) return;
+              event.preventDefault();
+              const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : (index + offset + TABS.length) % TABS.length;
+              setTab(TABS[next]);
+              document.getElementById(`editor-tab-${TABS[next]}`)?.focus();
+            }}>{label}</button>
+        ))}
+      </div>
+      <div id="editor-panel" role="tabpanel" aria-labelledby={`editor-tab-${tab}`} className={styles.editorPanel}>
+        {tab === 'Keycaps' && <>
+          <div className={styles.selectionSummary}>
+            <span role="status">{count ? `Editing ${count} ${count === 1 ? 'key' : 'keys'}` : 'Select keys to start'}</span>
+            {count > 0 && <button type="button" onClick={actions.clearSelection}>Clear</button>}
           </div>
-        )}
-      </div>
-      <ZonePanel state={state} onSelectZone={actions.selectZone} />
-      <ColorPanel
-        activeColor={state.activeColor}
-        onColorChange={actions.setActiveColor}
-        onApply={actions.applyColorToSelected}
-        onResetSelected={actions.resetSelectedKeys}
-        hasSelection={state.selectedKeys.length > 0}
-        colorHistory={state.colorHistory}
-        onClearHistory={actions.clearColorHistory}
-      />
-      <button
-        type="button"
-        className={styles.extractBtn}
-        onClick={onExtractFromImage}
-      >
-        Extract from image
-      </button>
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Case</h3>
-        <div className={styles.caseColorRow}>
-          <input
-            type="color"
-            className={styles.caseSwatch}
-            value={state.caseColor}
-            onChange={(e) => actions.setCaseColor(e.target.value)}
-            aria-label="Case color"
-            title="Case color"
-          />
-          <span className={styles.caseHex}>{state.caseColor}</span>
-        </div>
-        <div className={styles.segmented} role="group" aria-label="Case finish">
-          {CASE_FINISHES.map((finish) => (
-            <button
-              key={finish}
-              type="button"
-              className={`${styles.segmentBtn} ${state.caseFinish === finish ? styles.segmentBtnActive : ''}`}
-              onClick={() => actions.setCaseFinish(finish)}
-              aria-pressed={state.caseFinish === finish}
-            >
-              {finish}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className={styles.section}>
-        <button
-          type="button"
-          className={styles.sectionToggle}
-          onClick={() => setProfileOpen((v) => !v)}
-          aria-expanded={profileOpen}
-        >
-          <span className={styles.sectionTitle}>Profile</span>
-          <span className={styles.sectionMeta}>
-            <span className={styles.sectionCount}>
-              {PROFILES[state.profile]?.label ?? 'Flat'}
-            </span>
-            <span className={styles.sectionChevron} aria-hidden="true">
-              {profileOpen ? '▾' : '▸'}
-            </span>
-          </span>
-        </button>
-        {profileOpen && (
-          <div className={styles.buttonGroup} role="group" aria-label="Keycap profile">
-            {PROFILE_ORDER.map((id) => (
-              <button
-                key={id}
-                type="button"
+          <ZonePanel state={state} onSelectZone={actions.selectZone} />
+          <ColorPanel activeColor={state.activeColor} onColorChange={actions.setActiveColor}
+            onApply={actions.applyColorToSelected} onResetSelected={actions.resetSelectedKeys}
+            selectionCount={count} colorHistory={state.colorHistory} onClearHistory={actions.clearColorHistory} />
+          <button type="button" className={styles.extractBtn} onClick={onExtractFromImage}>Add colors from an image</button>
+          <details className={styles.section}>
+            <summary className={styles.profileSummary}>Keycap profile <span>{PROFILES[state.profile]?.label ?? 'Flat'}</span></summary>
+            <div className={styles.buttonGroup} role="group" aria-label="Keycap profile">
+              {PROFILE_ORDER.map((id) => <button key={id} type="button"
                 className={`${styles.btn} ${state.profile === id ? styles.btnActive : ''}`}
-                onClick={() => actions.setProfile(id)}
-                aria-pressed={state.profile === id}
-              >
-                {PROFILES[id].label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className={styles.section}>
-        <button
-          type="button"
-          className={styles.sectionToggle}
-          onClick={() => setLegendsOpen((v) => !v)}
-          aria-expanded={legendsOpen}
-        >
-          <span className={styles.sectionTitle}>Legends</span>
-          <span className={styles.sectionMeta}>
-            <span className={styles.sectionCount}>
-              {state.legendColor === 'auto' ? 'Auto' : state.legendColor} · {state.legendPosition}
-            </span>
-            <span className={styles.sectionChevron} aria-hidden="true">
-              {legendsOpen ? '▾' : '▸'}
-            </span>
-          </span>
-        </button>
-        {legendsOpen && (
-          <>
-            <div className={styles.caseColorRow}>
-              <input
-                type="color"
-                className={styles.caseSwatch}
-                value={state.legendColor === 'auto' ? '#cccccc' : state.legendColor}
-                onChange={(e) => actions.setLegendColor(e.target.value)}
-                aria-label="Legend color"
-                title="Legend color"
-              />
-              <button
-                type="button"
-                className={`${styles.autoBtn} ${state.legendColor === 'auto' ? styles.autoBtnActive : ''}`}
-                onClick={() => actions.setLegendColor('auto')}
-                aria-pressed={state.legendColor === 'auto'}
-                title="Auto-contrast legend per key"
-              >
-                Auto
-              </button>
+                aria-pressed={state.profile === id} onClick={() => actions.setProfile(id)}>{PROFILES[id].label}</button>)}
             </div>
-            <div className={styles.segmented} role="group" aria-label="Legend position">
-              {LEGEND_POSITIONS.map((pos) => (
-                <button
-                  key={pos}
-                  type="button"
-                  className={`${styles.segmentBtn} ${state.legendPosition === pos ? styles.segmentBtnActive : ''}`}
-                  onClick={() => actions.setLegendPosition(pos)}
-                  aria-pressed={state.legendPosition === pos}
-                >
-                  {pos}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Comparison</h3>
-        <div className={styles.segmented} role="group" aria-label="Comparison mode">
-          <button
-            type="button"
-            className={`${styles.segmentBtn} ${comparison.active ? styles.segmentBtnActive : ''}`}
-            onClick={actions.toggleComparison}
-            aria-pressed={comparison.active}
-          >
-            {comparison.active ? 'Comparing A / B' : 'Compare A / B'}
-          </button>
-        </div>
-        {comparison.active && (
-          <div className={styles.compareControls}>
-            <span className={styles.compareHint}>Set B from</span>
-            <button
-              type="button"
-              className={styles.extractBtn}
-              onClick={() => actions.setComparisonBoard(actions.snapshotCurrent())}
-            >
-              Duplicate A
-            </button>
-            <select
-              className={styles.compareSelect}
-              value=""
-              onChange={(e) => {
-                const idx = Number(e.target.value);
-                if (presets[idx]) {
-                  actions.setComparisonBoard(actions.snapshotFromPreset(presets[idx]));
-                }
-                e.target.value = '';
-              }}
-            >
-              <option value="" disabled>
-                Load preset…
-              </option>
-              {presets.map((p, i) => (
-                <option key={p.name} value={i}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            {slots.length > 0 && (
-              <div className={styles.buttonGroup}>
-                {slots.map((sl, i) => {
-                  const match = sl.layout === state.layout;
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      className={styles.btn}
-                      disabled={!match}
-                      title={match ? 'Load this slot into B' : 'Different layout'}
-                      onClick={() => actions.setComparisonBoard(actions.snapshotFromSlot(sl))}
-                    >
-                      {sl.colorwayName || `Slot ${i + 1}`}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {comparison.board && (
-              <button
-                type="button"
-                className={styles.resetSelectedBtn}
-                onClick={actions.clearComparisonBoard}
-              >
-                Clear B
-              </button>
-            )}
+            <p className={styles.help}>Flat shows solid colors. Other profiles add simulated keycap shading.</p>
+          </details>
+        </>}
+        {tab === 'Case' && <>
+          <h3 className={styles.sectionTitle}>Case color</h3>
+          <p className={styles.help}>Changes apply to the whole case.</p>
+          <div className={styles.caseColorRow}>
+            <input type="color" className={styles.caseSwatch} value={state.caseColor}
+              onFocus={actions.beginEdit} onBlur={actions.endEdit}
+              onChange={(event) => actions.setCaseColor(event.target.value)} aria-label="Case color" />
+            <span className={styles.caseHex}>{state.caseColor}</span>
           </div>
-        )}
+          <h3 className={styles.sectionTitle}>Finish</h3>
+          <div className={styles.segmented} role="group" aria-label="Case finish">
+            {['matte', 'gloss'].map((finish) => <button type="button" key={finish}
+              className={`${styles.segmentBtn} ${state.caseFinish === finish ? styles.segmentBtnActive : ''}`}
+              aria-pressed={state.caseFinish === finish} onClick={() => actions.setCaseFinish(finish)}>{finish}</button>)}
+          </div>
+        </>}
+        {tab === 'Lettering' && <>
+          <h3 className={styles.sectionTitle}>Lettering color</h3>
+          <p className={styles.help}>Applies to all key labels. Auto chooses light or dark text for each key.</p>
+          <div className={styles.caseColorRow}>
+            <input type="color" className={styles.caseSwatch} value={state.legendColor === 'auto' ? '#cccccc' : state.legendColor}
+              onFocus={actions.beginEdit} onBlur={actions.endEdit}
+              onChange={(event) => actions.setLegendColor(event.target.value)} aria-label="Lettering color" />
+            <button type="button" className={`${styles.autoBtn} ${state.legendColor === 'auto' ? styles.autoBtnActive : ''}`}
+              aria-pressed={state.legendColor === 'auto'} onClick={() => actions.setLegendColor('auto')}>Auto</button>
+          </div>
+          <h3 className={styles.sectionTitle}>Position</h3>
+          <div className={styles.segmented} role="group" aria-label="Lettering position">
+            {['top', 'front'].map((position) => <button type="button" key={position}
+              className={`${styles.segmentBtn} ${state.legendPosition === position ? styles.segmentBtnActive : ''}`}
+              disabled={position === 'front' && state.profile === 'flat'} aria-pressed={state.legendPosition === position}
+              onClick={() => actions.setLegendPosition(position)}>{position}</button>)}
+          </div>
+          {state.profile === 'flat' && <p className={styles.help}>Front lettering needs a shaded keycap profile.</p>}
+        </>}
       </div>
-      <ExportPanel
-        state={state}
-        actions={actions}
-        keyboardRef={keyboardRef}
-        comparisonRefB={comparisonRefB}
-      />
+      {state.comparison.active && <section className={styles.section} aria-label="Comparison reference">
+        <h3 className={styles.sectionTitle}>Compare with</h3>
+        <button type="button" className={styles.extractBtn} onClick={() => actions.setComparisonBoard(actions.snapshotCurrent())}>Snapshot of current design</button>
+        <select className={styles.compareSelect} aria-label="Reference preset" value="" onChange={(event) => {
+          const preset = presets[Number(event.target.value)];
+          if (preset) actions.setComparisonBoard(actions.snapshotFromPreset(preset));
+        }}>
+          <option value="" disabled>Choose a preset…</option>
+          {presets.map((preset, index) => <option key={preset.name} value={index}>{preset.name}</option>)}
+        </select>
+        <select className={styles.compareSelect} aria-label="Reference saved design" value="" onChange={(event) => {
+          const slot = slots[Number(event.target.value)];
+          if (slot) actions.setComparisonBoard(actions.snapshotFromSlot(slot));
+        }}>
+          <option value="" disabled>Choose a saved design…</option>
+          {slots.map((slot, index) => <option key={index} value={index} disabled={slot.layout !== state.layout}>{slot.colorwayName || 'Untitled'}{slot.layout !== state.layout ? ' (different layout)' : ''}</option>)}
+        </select>
+        {state.comparison.board && <button type="button" className={styles.resetSelectedBtn} onClick={actions.clearComparisonBoard}>Clear reference</button>}
+      </section>}
       <div className={styles.dangerSection}>
-        <button
-          type="button"
-          className={styles.resetAllBtn}
-          onClick={handleResetAll}
-        >
-          Reset All
-        </button>
+        <button type="button" className={styles.resetAllBtn} onClick={actions.resetAll}>Reset all colors</button>
+        <span className={styles.help}>You can undo this.</span>
       </div>
     </aside>
   );

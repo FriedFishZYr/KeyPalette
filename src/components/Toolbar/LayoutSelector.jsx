@@ -1,28 +1,16 @@
 import styles from './Toolbar.module.css';
 
-const LAYOUTS = [
-  { key: '60', label: '60%' },
-  { key: '65', label: '65%' },
-  { key: '75', label: '75%' },
-  { key: 'tkl', label: 'TKL' },
-  { key: 'full', label: 'Full' },
-];
-
 export default function LayoutSelector({ current, onSelect }) {
   return (
-    <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>Layout</h3>
-      <div className={styles.buttonGroup}>
-        {LAYOUTS.map(({ key, label }) => (
-          <button
-            key={key}
-            className={`${styles.btn} ${current === key ? styles.btnActive : ''}`}
-            onClick={() => onSelect(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
+    <label className={styles.layoutField}>
+      <span>Layout</span>
+      <select className={styles.input} value={current} onChange={(event) => onSelect(event.target.value)}>
+        <option value="60">60% · Compact</option>
+        <option value="65">65% · With arrows</option>
+        <option value="75">75% · Compact function row</option>
+        <option value="tkl">TKL · No numpad</option>
+        <option value="full">Full-size · With numpad</option>
+      </select>
+    </label>
   );
 }

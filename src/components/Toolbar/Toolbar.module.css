@@ -591,3 +591,24 @@
   outline: none;
   border-color: var(--accent);
 }
+
+/* Focused editor sections keep the existing compact, neutral controls. */
+.editorTabs { display: flex; gap: 4px; border-bottom: 1px solid var(--ws-input-border); padding-bottom: 8px; }
+.editorTabs button { flex: 1; padding: 8px 4px; border: 0; border-radius: 5px; background: transparent; color: var(--ws-label-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.editorTabs button[aria-selected="true"] { background: var(--ws-input-bg); color: var(--ws-label); }
+.editorPanel { display: flex; flex-direction: column; gap: 16px; }
+.selectionSummary { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ws-label); }
+.selectionSummary button { background: none; border: 0; color: var(--ws-label-muted); padding: 0; font: inherit; cursor: pointer; }
+.help { margin: 0; color: var(--ws-label-muted); font-size: 12px; line-height: 1.5; }
+.profileSummary { cursor: pointer; color: var(--ws-label-muted); font-size: 12px; margin-bottom: 10px; }
+.profileSummary span { float: right; color: var(--ws-label); }
+.section[open] .help { margin-top: 10px; }
+.segmentBtn:disabled { opacity: .35; cursor: not-allowed; }
+.dangerSection .help { display: block; margin-top: 8px; }
+.toolbar { gap: 16px; }
+.layoutField { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--ws-label-muted); }
+.layoutField select { flex: 1; width: 0; font-family: inherit; }
+.colorInputs { display: grid; grid-template-columns: 74px minmax(0, 1fr); align-items: end; }
+.colorInputs .colorRow { min-width: 0; }
+.colorInputs select { font-family: inherit; }
+.currentSwatch { height: 18px; }

@@ -2,7 +2,8 @@
   display: flex;
   /* Fixed-height shell (V3 §2): the page itself never scrolls. The toolbar
      scrolls on its own; the canvas region stays put and scales to fit. */
-  height: 100vh;
+  height: 100dvh;
+  flex-direction: column;
   overflow: hidden;
   font-family: system-ui, -apple-system, sans-serif;
   background: var(--ws-bg);
@@ -17,7 +18,7 @@
   --ws-panel: #1e1e1e;
   --ws-panel-border: rgba(255, 255, 255, 0.06);
   --ws-label: #e8e8e8;
-  --ws-label-muted: #666666;
+  --ws-label-muted: #999999;
   --ws-key-border: rgba(255, 255, 255, 0.12);
   --ws-input-bg: #2a2a2a;
   --ws-input-border: rgba(255, 255, 255, 0.1);
@@ -36,7 +37,7 @@
   --ws-panel: #ffffff;
   --ws-panel-border: rgba(0, 0, 0, 0.08);
   --ws-label: #1a1a1a;
-  --ws-label-muted: #999999;
+  --ws-label-muted: #666666;
   --ws-key-border: rgba(0, 0, 0, 0.15);
   --ws-input-bg: #f7f7f7;
   --ws-input-border: rgba(0, 0, 0, 0.1);
@@ -48,36 +49,17 @@
 }
 
 /* ── Layout ───────────────────────────────────────────────────────── */
-.main {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  /* min-* 0 lets this flex child shrink below its content size so the
-     ResizeObserver reports the true available space; overflow hidden keeps
-     the page-level scroll from returning when the scaled board still overflows
-     its (unscaled) layout box. */
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* ── Responsive stacking ──────────────────────────────────────────── */
-/* Narrow viewports collapse to a stacked layout (toolbar above canvas) with
-   normal page scroll — desktop-primary, same posture as V1/V2. */
+.workspace { display: flex; flex: 1; min-height: 0; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.canvas { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: 24px; }
+.canvasHint { padding: 0 16px 16px; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ws-label-muted); }
+:global(button:focus-visible), :global(summary:focus-visible), :global(select:focus-visible) { outline: 2px solid var(--ws-accent); outline-offset: 3px; }
 @media (max-width: 768px) {
-  .app {
-    flex-direction: column;
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  .main {
-    overflow: visible;
-    min-height: 50vh;
-  }
+  .app { height: auto; min-height: 100dvh; overflow: visible; }
+  .workspace { flex-direction: column; }
+  .main { order: -1; flex: none; height: 300px; }
+  .canvas { padding: 16px; }
+  .canvasHint { font-size: 11px; padding-bottom: 12px; }
 }
 
 /* ── Reset body margin ────────────────────────────────────────────── */
@@ -88,6 +70,6 @@
 /* ── react-colorful sizing ────────────────────────────────────────── */
 :global(.react-colorful) {
   width: 100% !important;
-  height: 160px !important;
+  height: 144px !important;
   border-radius: 8px !important;
 }

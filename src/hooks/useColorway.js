@@ -1,6 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import useLocalStorage from './useLocalStorage.js';
 import layouts from '../data/layouts/index.js';
+import { designHistoryReducer, initialHistory } from '../utils/designHistory.js';
+import { deserializeColorway } from '../utils/exportJson.js';
 
 const DEFAULT_STATE = {
   layout: 'tkl',
@@ -45,7 +47,27 @@ function buildInitialSlots() {
 }
 
 export default function useColorway() {
-  const [store, setStore] = useLocalStorage(STORAGE_KEY, buildInitialSlots);
+  const [persistedStore, persistStore, , storageStatus] = useLocalStorage(STORAGE_KEY, buildInitialSlots);
+  const [history, dispatch] = useReducer(designHistoryReducer, persistedStore, (saved) => {
+    const valid = saved && Array.isArray(saved.slots) && saved.slots.length > 0;
+    const slots = valid ? saved.slots.slice(0, MAX_SLOTS).map((slot) => {
+      try {
+        const clean = deserializeColorway({ ...DEFAULT_STATE, ...slot, version: 3, name: slot?.colorwayName });
+        return { ...DEFAULT_STATE, ...clean, colorwayName: clean.name,
+          workspace: slot?.workspace === 'light' ? 'light' : 'dark', selectedKeys: [] };
+      } catch { return { ...DEFAULT_STATE }; }
+    }) : buildInitialSlots().slots;
+    const active = Number.isInteger(saved?.active) && saved.active >= 0 && saved.active < slots.length ? saved.active : 0;
+    return initialHistory({ active, slots });
+  });
+  const store = history.present;
+  const setStore = useCallback((update) => dispatch({ type: 'update', update }), []);
+  const undo = useCallback(() => dispatch({ type: 'undo' }), []);
+  const redo = useCallback(() => dispatch({ type: 'redo' }), []);
+  const beginEdit = useCallback(() => dispatch({ type: 'begin' }), []);
+  const endEdit = useCallback(() => dispatch({ type: 'end' }), []);
+  useEffect(() => { persistStore(store); }, [store, persistStore]);
+  const saveStatus = storageStatus === 'error' ? 'error' : persistedStore === store ? storageStatus : 'saving';
 
   const [colorHistory, setColorHistory] = useLocalStorage(HISTORY_KEY, EMPTY_HISTORY);
 
@@ -124,6 +146,7 @@ export default function useColorway() {
     (layout) => update({ layout, selectedKeys: [] }),
     [update],
   );
+  const renameDesign = useCallback((colorwayName) => update({ colorwayName }), [update]);
 
   const setActiveColor = useCallback(
     (activeColor) => update({ activeColor }),
@@ -194,7 +217,7 @@ export default function useColorway() {
         const p = typeof prev === 'function' ? prev() : prev;
         const cur = p.slots[p.active];
         const layoutKeys = layouts[cur.layout] ?? [];
-        const selectedKeys = layoutKeys.filter((k) => k.zone === zoneKey).map((k) => k.id);
+        const selectedKeys = layoutKeys.filter((k) => zoneKey === 'all' || k.zone === zoneKey).map((k) => k.id);
         const activeColor = computeActiveColor(selectedKeys, cur.keyColors, cur.activeColor);
         const newSlots = [...p.slots];
         newSlots[p.active] = { ...cur, selectedKeys, activeColor };
@@ -357,7 +380,7 @@ export default function useColorway() {
     setStore((prev) => {
       const p = typeof prev === 'function' ? prev() : prev;
       if (p.slots.length >= MAX_SLOTS) return p;
-      const newSlots = [...p.slots, { ...DEFAULT_STATE }];
+      const newSlots = [...p.slots, { ...DEFAULT_STATE, colorwayName: `Design ${p.slots.length + 1}`, workspace: p.slots[p.active].workspace }];
       return { active: newSlots.length - 1, slots: newSlots };
     });
   }, [setStore]);
@@ -397,8 +420,8 @@ export default function useColorway() {
       caseColor: preset.caseColor,
       caseFinish: preset.caseFinish,
       profile: s.profile,
-      legendColor: 'auto',
-      legendPosition: 'top',
+      legendColor: s.legendColor,
+      legendPosition: s.legendPosition,
       keyColors,
     };
   }, []);
@@ -432,6 +455,7 @@ export default function useColorway() {
 
   const actions = useMemo(
     () => ({
+      undo, redo, beginEdit, endEdit, renameDesign,
       setLayout,
       setActiveColor,
       applyColorToSelected,
@@ -461,6 +485,7 @@ export default function useColorway() {
       clearComparisonBoard,
     }),
     [
+      undo, redo, beginEdit, endEdit, renameDesign,
       setLayout, setActiveColor, applyColorToSelected, toggleKeySelected,
       clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
       setProfile, setLegendColor, setLegendPosition,
@@ -472,5 +497,7 @@ export default function useColorway() {
     ],
   );
 
-  return { state, slots, activeSlot: active, actions };
+  return { state, slots, activeSlot: active, actions, saveStatus,
+    canUndo: (history.histories[active]?.past.length ?? 0) > 0,
+    canRedo: (history.histories[active]?.future.length ?? 0) > 0 };
 }

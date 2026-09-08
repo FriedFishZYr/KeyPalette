@@ -4,24 +4,28 @@ export default function useLocalStorage(key, defaultValue) {
   const [value, setValue] = useState(() => {
     try {
       const stored = localStorage.getItem(key);
-      return stored !== null ? JSON.parse(stored) : defaultValue;
+      return stored !== null ? JSON.parse(stored) : typeof defaultValue === 'function' ? defaultValue() : defaultValue;
     } catch {
-      return defaultValue;
+      return typeof defaultValue === 'function' ? defaultValue() : defaultValue;
     }
   });
+  const [savedValue, setSavedValue] = useState(null);
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      setSavedValue(value);
+      setSaveError(false);
     } catch {
-      // storage full or unavailable — silently ignore
+      setSaveError(true);
     }
   }, [key, value]);
 
   const remove = useCallback(() => {
     localStorage.removeItem(key);
-    setValue(defaultValue);
+    setValue(typeof defaultValue === 'function' ? defaultValue() : defaultValue);
   }, [key, defaultValue]);
 
-  return [value, setValue, remove];
+  return [value, setValue, remove, saveError ? 'error' : savedValue === value ? 'saved' : 'saving'];
 }

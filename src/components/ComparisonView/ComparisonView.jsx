@@ -28,7 +28,7 @@ export default function ComparisonView({
   return (
     <div className={`${styles.comparison} ${stacked ? styles.stacked : ''}`}>
       <div className={styles.board}>
-        <div className={styles.label}>{state.colorwayName || 'Untitled'}</div>
+        <div className={styles.label}>Current · {state.colorwayName || 'Untitled'}</div>
         <Keyboard
           state={state}
           actions={actions}
@@ -39,7 +39,7 @@ export default function ComparisonView({
         />
       </div>
       <div className={styles.board}>
-        <div className={styles.label}>{b ? b.name || 'Reference' : 'Board B'}</div>
+        <div className={styles.label}>Reference{b ? ` · ${b.name || 'Untitled'}` : ''}</div>
         {b ? (
           <Keyboard
             state={state}
@@ -52,7 +52,7 @@ export default function ComparisonView({
           />
         ) : (
           <div className={styles.empty}>
-            Pick a source for B in the toolbar (“Set B from…”).
+            Choose a reference under “Compare with” in the editor.
           </div>
         )}
       </div>

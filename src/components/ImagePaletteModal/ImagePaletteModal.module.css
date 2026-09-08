@@ -163,3 +163,13 @@
 .applyAllBtn:hover {
   opacity: 0.9;
 }
+
+.body { padding: 0 0 20px; }
+.footer { padding: 16px 0 0; }
+.dropZone { font-family: inherit; }
+@media (max-width: 540px) {
+  .body { flex-direction: column; }
+  .left, .dropZone { width: 100%; }
+  .dropZone { height: 160px; }
+  .footer { flex-wrap: wrap; }
+}

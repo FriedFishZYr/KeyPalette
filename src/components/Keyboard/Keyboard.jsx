@@ -30,7 +30,9 @@ export default function Keyboard({
 
   const svgW = boardW + CASE_PADDING * 2;
   const svgH = boardH + CASE_PADDING * 2;
-  const filterId = 'case-shadow';
+  const filterId = `case-shadow-${boardId}`;
+  const dishId = `key-dish-${boardId}`;
+  const liftId = `key-lift-${boardId}`;
 
   // Active keycap profile (V3 §5). The dish gradient is declared once below
   // using this profile's strength, then mapped to each key's top surface.
@@ -64,12 +66,12 @@ export default function Keyboard({
       className={styles.boardWrap}
       ref={svgRef}
       data-board={boardId}
-      style={{ transform: `scale(${fitScale})` }}
+
     >
     <svg
       className={styles.keyboard}
-      width={svgW}
-      height={svgH}
+      width={svgW * fitScale}
+      height={svgH * fitScale}
       viewBox={`${-CASE_PADDING} ${-CASE_PADDING} ${svgW} ${svgH}`}
     >
       <defs>
@@ -79,21 +81,21 @@ export default function Keyboard({
             (lighter top, darker bottom); spherical = radial (lighter center,
             darker edges). Strength comes from the active profile. */}
         {profile.dish === 'cylindrical' && (
-          <linearGradient id="key-dish" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={dishId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ffffff" stopOpacity={profile.dishStrength} />
             <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
             <stop offset="100%" stopColor="#000000" stopOpacity={profile.dishStrength} />
           </linearGradient>
         )}
         {profile.dish === 'spherical' && (
-          <radialGradient id="key-dish" cx="50%" cy="42%" r="62%">
+          <radialGradient id={dishId} cx="50%" cy="42%" r="62%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity={profile.dishStrength} />
             <stop offset="55%" stopColor="#ffffff" stopOpacity="0" />
             <stop offset="100%" stopColor="#000000" stopOpacity={profile.dishStrength} />
           </radialGradient>
         )}
         {/* Lifted shadow for selected keys */}
-        <filter id="key-lift" x="-10%" y="-10%" width="120%" height="130%">
+        <filter id={liftId} x="-10%" y="-10%" width="120%" height="130%">
           <feDropShadow dx={0} dy={3} stdDeviation={4} floodColor="#000" floodOpacity={0.3} />
         </filter>
       </defs>
@@ -114,6 +116,8 @@ export default function Keyboard({
           onClick={readOnly ? undefined : actions.toggleKeySelected}
           interactive={!readOnly}
           profile={profile}
+          dishId={dishId}
+          liftId={liftId}
           legendColor={board.legendColor}
           legendPosition={board.legendPosition}
         />
@@ -123,6 +127,7 @@ export default function Keyboard({
         <button
           type="button"
           className={styles.hexBadge}
+          data-selection-ring
           style={{ left: `${badgeLeft}%`, top: `${badgeTop}%` }}
           onClick={(e) => {
             e.stopPropagation();

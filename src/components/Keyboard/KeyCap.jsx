@@ -10,6 +10,8 @@ export default function KeyCap({
   selected,
   onClick,
   profile,
+  dishId,
+  liftId,
   legendColor = 'auto',
   legendPosition = 'top',
   interactive = true,
@@ -78,6 +80,15 @@ export default function KeyCap({
     <g
       className={interactive ? styles.keycap : undefined}
       onClick={interactive ? handleClick : undefined}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `${keyData.label} key, ${color}` : undefined}
+      aria-pressed={interactive ? selected : undefined}
+      onKeyDown={interactive ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault(); handleClick(event);
+        }
+      } : undefined}
     >
       {isFlat ? (
         /* Flat (default): a single rounded rect in the true color, V2 border,
@@ -90,7 +101,7 @@ export default function KeyCap({
           rx={6}
           ry={6}
           fill={color}
-          filter={selected ? 'url(#key-lift)' : undefined}
+          filter={selected ? `url(#${liftId})` : undefined}
           className={styles.keyRect}
         />
       ) : (
@@ -105,7 +116,7 @@ export default function KeyCap({
             rx={6}
             ry={6}
             fill={sidewallColor}
-            filter={selected ? 'url(#key-lift)' : undefined}
+            filter={selected ? `url(#${liftId})` : undefined}
             className={styles.keyRect}
           />
           {/* Top surface — the key's true color. */}
@@ -119,7 +130,7 @@ export default function KeyCap({
             height={topH}
             rx={4}
             ry={4}
-            fill="url(#key-dish)"
+            fill={`url(#${dishId})`}
             pointerEvents="none"
           />
           {/* Top-edge highlight on the top surface. */}
