@@ -599,6 +599,8 @@
 .editorPanel { display: flex; flex-direction: column; gap: 16px; }
 .selectionSummary { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ws-label); }
 .selectionSummary button { background: none; border: 0; color: var(--ws-label-muted); padding: 0; font: inherit; cursor: pointer; }
+.selectionSummary button:hover { color: var(--ws-label); }
+.selectionActions { display: flex; gap: 12px; flex: none; }
 .help { margin: 0; color: var(--ws-label-muted); font-size: 12px; line-height: 1.5; }
 .profileSummary { cursor: pointer; color: var(--ws-label-muted); font-size: 12px; margin-bottom: 10px; }
 .profileSummary span { float: right; color: var(--ws-label); }
@@ -612,3 +614,10 @@
 .colorInputs .colorRow { min-width: 0; }
 .colorInputs select { font-family: inherit; }
 .currentSwatch { height: 18px; }
+.inlinePicker { display: flex; flex-direction: column; gap: 8px; }
+.inlinePicker .colorField { max-width: 140px; }
+@media (max-width: 768px) {
+  .toolbar { gap: 14px; }
+  .buttonGroup { gap: 6px; }
+  .zonePill, .btn { min-height: 34px; }
+}

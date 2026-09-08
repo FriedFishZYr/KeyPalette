@@ -49,9 +49,14 @@
 .keyRect {
   stroke: var(--ws-key-border);
   stroke-width: 1;
-  rx: 6;
-  ry: 6;
   transition: fill 150ms ease;
+}
+
+/* Contact shadow under shaded keycaps. */
+.keyShadow {
+  fill: #000;
+  opacity: 0.22;
+  pointer-events: none;
 }
 
 /* Top-edge highlight on the keycap top surface (V3 §5). */

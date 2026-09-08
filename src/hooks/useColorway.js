@@ -2,35 +2,16 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import useLocalStorage from './useLocalStorage.js';
 import layouts from '../data/layouts/index.js';
 import { designHistoryReducer, initialHistory } from '../utils/designHistory.js';
-import { deserializeColorway } from '../utils/exportJson.js';
+import {
+  DEFAULT_STATE, DEFAULT_KEY_COLOR, DEFAULT_CASE_COLOR, MAX_SLOTS, STORAGE_KEY, HISTORY_KEY,
+  buildInitialSlots, normalizeStore, nextCopyName,
+} from '../utils/designStore.js';
 
-const DEFAULT_STATE = {
-  layout: 'tkl',
-  caseColor: '#1a1a1a',
-  caseFinish: 'matte',
-  keyColors: {},
-  selectedKeys: [],
-  activeColor: '#cccccc',
-  colorwayName: 'Untitled',
-  workspace: 'dark',
-  // V3 additions:
-  profile: 'flat', // "flat" (default, clean 2D) | "sa" | "oem" | "cherry" | "dsa"
-  legendColor: 'auto', // "auto" | "#rrggbb"
-  legendPosition: 'top', // "top" | "front"
-};
+export { DEFAULT_KEY_COLOR, MAX_SLOTS };
 
-const STORAGE_KEY = 'keypalette-slots';
-const MAX_SLOTS = 5;
-
-// Section 4: recently-used colors, persisted separately from the slot store.
-const HISTORY_KEY = 'keypalette-color-history';
+// Recently-used colors, persisted separately from the slot store.
 const MAX_HISTORY = 16;
 const EMPTY_HISTORY = [];
-
-// Per V2 spec section 3: every key starts at and resets to this color.
-// Kept in sync with the render fallback in Keyboard.jsx.
-export const DEFAULT_KEY_COLOR = '#e0e0e0';
-const DEFAULT_CASE_COLOR = '#1a1a1a';
 
 function computeActiveColor(selectedKeys, keyColors, currentActiveColor) {
   if (selectedKeys.length === 0) return currentActiveColor;
@@ -42,24 +23,26 @@ function computeActiveColor(selectedKeys, keyColors, currentActiveColor) {
   return first;
 }
 
-function buildInitialSlots() {
-  return { active: 0, slots: [{ ...DEFAULT_STATE }] };
-}
+const replaceActive = (store, slot) => ({
+  ...store,
+  slots: store.slots.map((s, i) => (i === store.active ? slot : s)),
+});
+
+const zoneKeyColors = (layoutKeys, preset) => {
+  const keyColors = {};
+  for (const k of layoutKeys) {
+    const zoneColor = preset.zones[k.zone];
+    if (zoneColor) keyColors[k.id] = zoneColor;
+  }
+  return keyColors;
+};
 
 export default function useColorway() {
-  const [persistedStore, persistStore, , storageStatus] = useLocalStorage(STORAGE_KEY, buildInitialSlots);
-  const [history, dispatch] = useReducer(designHistoryReducer, persistedStore, (saved) => {
-    const valid = saved && Array.isArray(saved.slots) && saved.slots.length > 0;
-    const slots = valid ? saved.slots.slice(0, MAX_SLOTS).map((slot) => {
-      try {
-        const clean = deserializeColorway({ ...DEFAULT_STATE, ...slot, version: 3, name: slot?.colorwayName });
-        return { ...DEFAULT_STATE, ...clean, colorwayName: clean.name,
-          workspace: slot?.workspace === 'light' ? 'light' : 'dark', selectedKeys: [] };
-      } catch { return { ...DEFAULT_STATE }; }
-    }) : buildInitialSlots().slots;
-    const active = Number.isInteger(saved?.active) && saved.active >= 0 && saved.active < slots.length ? saved.active : 0;
-    return initialHistory({ active, slots });
-  });
+  const [persistedStore, persistStore, saveStatus, unreadableStore] = useLocalStorage(STORAGE_KEY, buildInitialSlots);
+  // Validate once, leniently: invalid values fall back to defaults and the
+  // fact that something was dropped is surfaced so the UI can offer a backup.
+  const [normalized] = useState(() => normalizeStore(persistedStore));
+  const [history, dispatch] = useReducer(designHistoryReducer, normalized.store, initialHistory);
   const store = history.present;
   const setStore = useCallback((update) => dispatch({ type: 'update', update }), []);
   const undo = useCallback(() => dispatch({ type: 'undo' }), []);
@@ -67,35 +50,25 @@ export default function useColorway() {
   const beginEdit = useCallback(() => dispatch({ type: 'begin' }), []);
   const endEdit = useCallback(() => dispatch({ type: 'end' }), []);
   useEffect(() => { persistStore(store); }, [store, persistStore]);
-  const saveStatus = storageStatus === 'error' ? 'error' : persistedStore === store ? storageStatus : 'saving';
 
   const [colorHistory, setColorHistory] = useLocalStorage(HISTORY_KEY, EMPTY_HISTORY);
 
-  // Comparison (V3 §9) is session-only — deliberately NOT persisted, so it
-  // lives in component state rather than the localStorage slot store.
+  // Comparison is session-only — deliberately NOT persisted, so it lives in
+  // component state rather than the localStorage slot store.
   const [comparison, setComparison] = useState({ active: false, board: null });
 
-  // Lazily normalise: if store was built by the factory, call it
-  const normalised = typeof store === 'function' ? store() : store;
-  const { active, slots } = normalised;
+  const { active, slots } = store;
   const slot = slots[active] ?? { ...DEFAULT_STATE };
   // colorHistory lives in its own localStorage key but is surfaced on the
   // state object so consumers can read it like any other field.
-  // V3 fields are default-filled here so pre-V3 slots (saved without them)
-  // load cleanly (backward compatible).
-  const state = {
-    ...slot,
-    profile: slot.profile ?? 'flat',
-    legendColor: slot.legendColor ?? 'auto',
-    legendPosition: slot.legendPosition ?? 'top',
-    comparison,
-    colorHistory,
-  };
+  const state = { ...slot, comparison, colorHistory };
 
   // Always points at the latest committed state so event handlers can read
   // fresh values without re-creating callbacks on every render.
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => {
+    stateRef.current = state;
+  });
 
   const pushToHistory = useCallback(
     (hex) => {
@@ -126,58 +99,34 @@ export default function useColorway() {
     [setColorHistory],
   );
 
-  const clearColorHistory = useCallback(() => {
-    setColorHistory([]);
-  }, [setColorHistory]);
+  const clearColorHistory = useCallback(() => setColorHistory([]), [setColorHistory]);
 
   const update = useCallback(
-    (patch) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
-        const newSlots = [...p.slots];
-        newSlots[p.active] = { ...newSlots[p.active], ...patch };
-        return { ...p, slots: newSlots };
-      });
-    },
+    (patch) => setStore((p) => replaceActive(p, { ...p.slots[p.active], ...patch })),
     [setStore],
   );
 
-  const setLayout = useCallback(
-    (layout) => update({ layout, selectedKeys: [] }),
-    [update],
-  );
+  const setLayout = useCallback((layout) => update({ layout, selectedKeys: [] }), [update]);
   const renameDesign = useCallback((colorwayName) => update({ colorwayName }), [update]);
-
-  const setActiveColor = useCallback(
-    (activeColor) => update({ activeColor }),
-    [update],
-  );
+  const setActiveColor = useCallback((activeColor) => update({ activeColor }), [update]);
 
   const applyColorToSelected = useCallback(() => {
-    setStore((prev) => {
-      const p = typeof prev === 'function' ? prev() : prev;
+    setStore((p) => {
       const cur = p.slots[p.active];
-      if (cur.activeColor == null) return p;
+      if (cur.activeColor == null || cur.selectedKeys.length === 0) return p;
       const keyColors = { ...cur.keyColors };
-      for (const id of cur.selectedKeys) {
-        keyColors[id] = cur.activeColor;
-      }
-      const newSlots = [...p.slots];
-      newSlots[p.active] = { ...cur, keyColors };
-      return { ...p, slots: newSlots };
+      for (const id of cur.selectedKeys) keyColors[id] = cur.activeColor;
+      return replaceActive(p, { ...cur, keyColors });
     });
     // Record the applied color once, reading the value synchronously from the
     // ref so it doesn't depend on the (async) setStore updater running first.
     const { activeColor, selectedKeys } = stateRef.current;
-    if (activeColor != null && selectedKeys.length > 0) {
-      pushToHistory(activeColor);
-    }
+    if (activeColor != null && selectedKeys.length > 0) pushToHistory(activeColor);
   }, [setStore, pushToHistory]);
 
   const toggleKeySelected = useCallback(
     (keyId, additive) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
+      setStore((p) => {
         const cur = p.slots[p.active];
         let selectedKeys;
         if (additive) {
@@ -188,103 +137,81 @@ export default function useColorway() {
           selectedKeys = [keyId];
         }
         const activeColor = computeActiveColor(selectedKeys, cur.keyColors, cur.activeColor);
-        const newSlots = [...p.slots];
-        newSlots[p.active] = { ...cur, selectedKeys, activeColor };
-        return { ...p, slots: newSlots };
+        return replaceActive(p, { ...cur, selectedKeys, activeColor });
       });
     },
     [setStore],
   );
 
-  // Clears the current selection (V3 §4). Used by background clicks and the
-  // Escape key; because the hex badge only renders for a single selection,
-  // clearing also dismisses the badge.
+  // Select every key that currently shares keyId's color — handy for
+  // recoloring an accent set that isn't a single zone.
+  const selectSameColor = useCallback(
+    (keyId, additive = false) => {
+      setStore((p) => {
+        const cur = p.slots[p.active];
+        const target = cur.keyColors[keyId] ?? DEFAULT_KEY_COLOR;
+        const layoutKeys = layouts[cur.layout] ?? [];
+        const matching = layoutKeys
+          .filter((k) => (cur.keyColors[k.id] ?? DEFAULT_KEY_COLOR) === target)
+          .map((k) => k.id);
+        const selectedKeys = additive ? [...new Set([...cur.selectedKeys, ...matching])] : matching;
+        const activeColor = computeActiveColor(selectedKeys, cur.keyColors, cur.activeColor);
+        return replaceActive(p, { ...cur, selectedKeys, activeColor });
+      });
+    },
+    [setStore],
+  );
+
+  // Clears the current selection. Used by background clicks and the Escape
+  // key; because the hex badge only renders for a single selection, clearing
+  // also dismisses the badge.
   const clearSelection = useCallback(() => {
-    setStore((prev) => {
-      const p = typeof prev === 'function' ? prev() : prev;
+    setStore((p) => {
       const cur = p.slots[p.active];
       if (cur.selectedKeys.length === 0) return p;
-      const activeColor = computeActiveColor([], cur.keyColors, cur.activeColor);
-      const newSlots = [...p.slots];
-      newSlots[p.active] = { ...cur, selectedKeys: [], activeColor };
-      return { ...p, slots: newSlots };
+      return replaceActive(p, { ...cur, selectedKeys: [] });
     });
   }, [setStore]);
 
   const selectZone = useCallback(
     (zoneKey) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
+      setStore((p) => {
         const cur = p.slots[p.active];
         const layoutKeys = layouts[cur.layout] ?? [];
         const selectedKeys = layoutKeys.filter((k) => zoneKey === 'all' || k.zone === zoneKey).map((k) => k.id);
         const activeColor = computeActiveColor(selectedKeys, cur.keyColors, cur.activeColor);
-        const newSlots = [...p.slots];
-        newSlots[p.active] = { ...cur, selectedKeys, activeColor };
-        return { ...p, slots: newSlots };
+        return replaceActive(p, { ...cur, selectedKeys, activeColor });
       });
     },
     [setStore],
   );
 
-  const setCaseColor = useCallback(
-    (caseColor) => update({ caseColor }),
-    [update],
-  );
-
-  const setCaseFinish = useCallback(
-    (caseFinish) => update({ caseFinish }),
-    [update],
-  );
-
-  const setWorkspace = useCallback(
-    (workspace) => update({ workspace }),
-    [update],
-  );
-
-  // V3 §5 / §6 board-wide visual settings.
+  const setCaseColor = useCallback((caseColor) => update({ caseColor }), [update]);
+  const setCaseFinish = useCallback((caseFinish) => update({ caseFinish }), [update]);
+  const setWorkspace = useCallback((workspace) => update({ workspace }), [update]);
   const setProfile = useCallback((profile) => update({ profile }), [update]);
-  const setLegendColor = useCallback(
-    (legendColor) => update({ legendColor }),
-    [update],
-  );
-  const setLegendPosition = useCallback(
-    (legendPosition) => update({ legendPosition }),
-    [update],
-  );
+  const setLegendColor = useCallback((legendColor) => update({ legendColor }), [update]);
+  const setLegendPosition = useCallback((legendPosition) => update({ legendPosition }), [update]);
 
   const resetSelectedKeys = useCallback(() => {
-    setStore((prev) => {
-      const p = typeof prev === 'function' ? prev() : prev;
+    setStore((p) => {
       const cur = p.slots[p.active];
       if (cur.selectedKeys.length === 0) return p;
       const keyColors = { ...cur.keyColors };
-      for (const id of cur.selectedKeys) {
-        keyColors[id] = DEFAULT_KEY_COLOR;
-      }
+      for (const id of cur.selectedKeys) keyColors[id] = DEFAULT_KEY_COLOR;
       const activeColor = computeActiveColor(cur.selectedKeys, keyColors, cur.activeColor);
-      const newSlots = [...p.slots];
-      newSlots[p.active] = { ...cur, keyColors, activeColor };
-      return { ...p, slots: newSlots };
+      return replaceActive(p, { ...cur, keyColors, activeColor });
     });
   }, [setStore]);
 
   // Wipes keyColors and caseColor only. Leaves layout, workspace, colorwayName,
   // caseFinish, selectedKeys, and the saved slot list untouched.
   const resetAll = useCallback(() => {
-    setStore((prev) => {
-      const p = typeof prev === 'function' ? prev() : prev;
+    setStore((p) => {
       const cur = p.slots[p.active];
       const keyColors = {};
       const activeColor = computeActiveColor(cur.selectedKeys, keyColors, cur.activeColor);
-      const newSlots = [...p.slots];
-      newSlots[p.active] = {
-        ...cur,
-        keyColors,
-        caseColor: DEFAULT_CASE_COLOR,
-        activeColor,
-      };
-      return { ...p, slots: newSlots };
+      return replaceActive(p, { ...cur, keyColors, caseColor: DEFAULT_CASE_COLOR, activeColor });
     });
   }, [setStore]);
 
@@ -292,44 +219,28 @@ export default function useColorway() {
   // are mapped onto every key in the current layout that belongs to that zone.
   const applyPreset = useCallback(
     (preset) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
+      setStore((p) => {
         const cur = p.slots[p.active];
-        const layoutKeys = layouts[cur.layout] ?? [];
-        const keyColors = {};
-        for (const k of layoutKeys) {
-          const zoneColor = preset.zones[k.zone];
-          if (zoneColor) keyColors[k.id] = zoneColor;
-        }
+        const keyColors = zoneKeyColors(layouts[cur.layout] ?? [], preset);
         const activeColor = computeActiveColor(cur.selectedKeys, keyColors, cur.activeColor);
-        const newSlots = [...p.slots];
-        newSlots[p.active] = {
-          ...cur,
-          keyColors,
-          caseColor: preset.caseColor,
-          caseFinish: preset.caseFinish,
-          activeColor,
-        };
-        return { ...p, slots: newSlots };
+        return replaceActive(p, {
+          ...cur, keyColors, caseColor: preset.caseColor, caseFinish: preset.caseFinish, activeColor,
+        });
       });
     },
     [setStore],
   );
 
-  // Applies a validated imported colorway (V2 §9 / V3 §10) onto the active
-  // slot, overwriting layout, case, key colors, name, and the V3 visual fields.
+  // Applies a validated colorway (file import or shared link) onto the active
+  // slot, overwriting layout, case, key colors, name, and the visual fields.
   // deserializeColorway default-fills profile/legendColor/legendPosition for
-  // older (v1/v2) files, so they're always present here. Selection is cleared.
+  // older files, so they're always present here. Selection is cleared.
   const importColorway = useCallback(
     (data) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
+      setStore((p) => {
         const cur = p.slots[p.active];
         const keyColors = { ...data.keyColors };
-        const selectedKeys = [];
-        const activeColor = computeActiveColor(selectedKeys, keyColors, cur.activeColor);
-        const newSlots = [...p.slots];
-        newSlots[p.active] = {
+        return replaceActive(p, {
           ...cur,
           layout: data.layout,
           caseColor: data.caseColor ?? cur.caseColor,
@@ -339,57 +250,82 @@ export default function useColorway() {
           legendPosition: data.legendPosition ?? cur.legendPosition ?? 'top',
           keyColors,
           colorwayName: data.name ?? cur.colorwayName,
-          selectedKeys,
-          activeColor,
-        };
-        return { ...p, slots: newSlots };
+          selectedKeys: [],
+          activeColor: computeActiveColor([], keyColors, cur.activeColor),
+        });
       });
     },
     [setStore],
   );
 
-  // Slot management
-  const saveSlot = useCallback(
-    (index, name) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
-        const newSlots = [...p.slots];
-        if (index < MAX_SLOTS) {
-          newSlots[index] = { ...p.slots[p.active], colorwayName: name };
-        }
-        return { ...p, slots: newSlots };
-      });
-    },
-    [setStore],
-  );
-
+  // ── Slot management ─────────────────────────────────────────────────────
   const loadSlot = useCallback(
-    (index) => {
-      setStore((prev) => {
-        const p = typeof prev === 'function' ? prev() : prev;
-        if (index >= 0 && index < p.slots.length) {
-          return { ...p, active: index };
-        }
-        return p;
+    (index) => setStore((p) => (index >= 0 && index < p.slots.length ? { ...p, active: index } : p)),
+    [setStore],
+  );
+
+  const createSlot = useCallback(
+    (initial = null) => {
+      setStore((p) => {
+        if (p.slots.length >= MAX_SLOTS) return p;
+        const fresh = {
+          ...DEFAULT_STATE,
+          colorwayName: `Design ${p.slots.length + 1}`,
+          workspace: p.slots[p.active].workspace,
+          ...(initial ?? {}),
+          selectedKeys: [],
+        };
+        return { active: p.slots.length, slots: [...p.slots, fresh] };
       });
     },
     [setStore],
   );
 
-  const createSlot = useCallback(() => {
-    setStore((prev) => {
-      const p = typeof prev === 'function' ? prev() : prev;
-      if (p.slots.length >= MAX_SLOTS) return p;
-      const newSlots = [...p.slots, { ...DEFAULT_STATE, colorwayName: `Design ${p.slots.length + 1}`, workspace: p.slots[p.active].workspace }];
-      return { active: newSlots.length - 1, slots: newSlots };
-    });
-  }, [setStore]);
+  const duplicateSlot = useCallback(
+    (index) => {
+      setStore((p) => {
+        const source = p.slots[index];
+        if (!source || p.slots.length >= MAX_SLOTS) return p;
+        const copy = {
+          ...source,
+          keyColors: { ...source.keyColors },
+          colorwayName: nextCopyName(source.colorwayName, p.slots.map((s) => s.colorwayName)),
+          selectedKeys: [],
+        };
+        return { active: p.slots.length, slots: [...p.slots, copy] };
+      });
+    },
+    [setStore],
+  );
 
-  // ── Comparison (V3 §9) ──────────────────────────────────────────────────
+  const deleteSlot = useCallback((index) => dispatch({ type: 'deleteSlot', index }), []);
+
+  // A design from a share link: a new slot when there is room, otherwise an
+  // undoable replacement of the active design. Returns whether it was new.
+  const slotCountRef = useRef(slots.length);
+  useEffect(() => {
+    slotCountRef.current = slots.length;
+  });
+  const openShared = useCallback(
+    (data) => {
+      const asNew = slotCountRef.current < MAX_SLOTS;
+      if (asNew) {
+        createSlot({
+          layout: data.layout, caseColor: data.caseColor, caseFinish: data.caseFinish, profile: data.profile,
+          legendColor: data.legendColor, legendPosition: data.legendPosition, keyColors: { ...data.keyColors },
+          colorwayName: data.name,
+        });
+      } else {
+        importColorway(data);
+      }
+      return asNew;
+    },
+    [createSlot, importColorway],
+  );
+
+  // ── Comparison ──────────────────────────────────────────────────────────
   // A read-only board "B" snapshot, rendered next to the live board "A".
 
-  // Snapshot of the current live colorway (board A). Read synchronously off the
-  // ref so it captures the latest committed state.
   const snapshotCurrent = useCallback(() => {
     const s = stateRef.current;
     return {
@@ -408,12 +344,6 @@ export default function useColorway() {
   // Inherits A's profile/legend so the comparison differs only in colors.
   const snapshotFromPreset = useCallback((preset) => {
     const s = stateRef.current;
-    const layoutKeys = layouts[s.layout] ?? [];
-    const keyColors = {};
-    for (const k of layoutKeys) {
-      const zoneColor = preset.zones[k.zone];
-      if (zoneColor) keyColors[k.id] = zoneColor;
-    }
     return {
       name: preset.name,
       layout: s.layout,
@@ -422,11 +352,10 @@ export default function useColorway() {
       profile: s.profile,
       legendColor: s.legendColor,
       legendPosition: s.legendPosition,
-      keyColors,
+      keyColors: zoneKeyColors(layouts[s.layout] ?? [], preset),
     };
   }, []);
 
-  // Snapshot from a saved slot (default-filling pre-V3 fields).
   const snapshotFromSlot = useCallback(
     (slotData) => ({
       name: slotData.colorwayName ?? 'Saved',
@@ -441,63 +370,39 @@ export default function useColorway() {
     [],
   );
 
-  const toggleComparison = useCallback(() => {
-    setComparison((c) => ({ ...c, active: !c.active }));
-  }, []);
-
-  const setComparisonBoard = useCallback((snapshot) => {
-    setComparison({ active: true, board: snapshot });
-  }, []);
-
-  const clearComparisonBoard = useCallback(() => {
-    setComparison((c) => ({ ...c, board: null }));
-  }, []);
+  const toggleComparison = useCallback(() => setComparison((c) => ({ ...c, active: !c.active })), []);
+  const setComparisonBoard = useCallback((snapshot) => setComparison({ active: true, board: snapshot }), []);
+  const clearComparisonBoard = useCallback(() => setComparison((c) => ({ ...c, board: null })), []);
 
   const actions = useMemo(
     () => ({
       undo, redo, beginEdit, endEdit, renameDesign,
-      setLayout,
-      setActiveColor,
-      applyColorToSelected,
-      toggleKeySelected,
-      clearSelection,
-      selectZone,
-      setCaseColor,
-      setCaseFinish,
-      setWorkspace,
-      setProfile,
-      setLegendColor,
-      setLegendPosition,
-      resetSelectedKeys,
-      resetAll,
-      applyPreset,
-      importColorway,
-      addColorsToHistory,
-      clearColorHistory,
-      saveSlot,
-      loadSlot,
-      createSlot,
-      snapshotCurrent,
-      snapshotFromPreset,
-      snapshotFromSlot,
-      toggleComparison,
-      setComparisonBoard,
-      clearComparisonBoard,
-    }),
-    [
-      undo, redo, beginEdit, endEdit, renameDesign,
-      setLayout, setActiveColor, applyColorToSelected, toggleKeySelected,
+      setLayout, setActiveColor, applyColorToSelected, toggleKeySelected, selectSameColor,
       clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
       setProfile, setLegendColor, setLegendPosition,
       resetSelectedKeys, resetAll, applyPreset, importColorway,
       addColorsToHistory, clearColorHistory,
-      saveSlot, loadSlot, createSlot,
+      loadSlot, createSlot, duplicateSlot, deleteSlot, openShared,
+      snapshotCurrent, snapshotFromPreset, snapshotFromSlot,
+      toggleComparison, setComparisonBoard, clearComparisonBoard,
+    }),
+    [
+      undo, redo, beginEdit, endEdit, renameDesign,
+      setLayout, setActiveColor, applyColorToSelected, toggleKeySelected, selectSameColor,
+      clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
+      setProfile, setLegendColor, setLegendPosition,
+      resetSelectedKeys, resetAll, applyPreset, importColorway,
+      addColorsToHistory, clearColorHistory,
+      loadSlot, createSlot, duplicateSlot, deleteSlot, openShared,
       snapshotCurrent, snapshotFromPreset, snapshotFromSlot,
       toggleComparison, setComparisonBoard, clearComparisonBoard,
     ],
   );
 
-  return { state, slots, activeSlot: active, actions, saveStatus,
+  return {
+    state, slots, activeSlot: active, actions, saveStatus,
     canUndo: (history.histories[active]?.past.length ?? 0) > 0,
-    canRedo: (history.histories[active]?.future.length ?? 0) > 0 };
+    canRedo: (history.histories[active]?.future.length ?? 0) > 0,
+    storageIssues: { unreadable: unreadableStore, repaired: normalized.repaired },
+  };
 }

@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { initialHistory, designHistoryReducer as reduce } from '../src/utils/designHistory.js';
 
@@ -77,4 +77,24 @@ test('history is bounded and unchanged designs do not add steps', () => {
   assert.equal(state.histories[0].past.length, 50);
   for (let i = 0; i < 51; i++) state = reduce(state, { type: 'undo' });
   assert.equal(state.present.slots[0].colorwayName, 'Design 9');
+});
+
+test('deleting a design shifts later histories down and keeps a sensible active design', () => {
+  let state = initialHistory({ active: 0, slots: [design(), design(), design()] });
+  state = edit(state, { caseColor: '#111111' });
+  state = switchTo(state, 2);
+  state = edit(state, { caseColor: '#222222' });
+  state = reduce(state, { type: 'deleteSlot', index: 1 });
+  assert.equal(state.present.slots.length, 2);
+  assert.equal(state.present.active, 1);
+  assert.equal(state.histories[1].past.length, 1);
+  state = reduce(state, { type: 'undo' });
+  assert.equal(state.present.slots[1].caseColor, '#1a1a1a');
+  // Deleting the active, last design falls back to its neighbour.
+  state = reduce(state, { type: 'deleteSlot', index: 1 });
+  assert.equal(state.present.active, 0);
+  assert.equal(state.present.slots[0].caseColor, '#111111');
+  // The last remaining design and out-of-range indexes are ignored.
+  assert.equal(reduce(state, { type: 'deleteSlot', index: 0 }), state);
+  assert.equal(reduce(state, { type: 'deleteSlot', index: 5 }), state);
 });

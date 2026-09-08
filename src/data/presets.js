@@ -1,7 +1,11 @@
 // Built-in colorways. Colors are assigned per zone so a preset applies across
 // every layout without per-layout key-ID mappings (see applyPreset in
 // useColorway.js). Alpha + number share one accent; the remaining zones share
-// the other, matching the two-color table in V2.md section 6.
+// the other.
+//
+// Names are original: some palettes are inspired by well-known editor themes
+// (named as such) and others by classic keycap-set colorways, which are given
+// their own names here rather than reusing product names.
 const presets = [
   {
     name: 'WoB',
@@ -32,7 +36,7 @@ const presets = [
     },
   },
   {
-    name: 'Miami',
+    name: 'Neon Coast',
     caseColor: '#ffffff',
     caseFinish: 'matte',
     zones: {
@@ -88,7 +92,7 @@ const presets = [
     },
   },
   {
-    name: 'Olivia',
+    name: 'Blush',
     caseColor: '#1a1a1a',
     caseFinish: 'matte',
     zones: {
@@ -102,7 +106,7 @@ const presets = [
     },
   },
   {
-    name: 'Cyber',
+    name: 'Circuit',
     caseColor: '#0a0a0a',
     caseFinish: 'matte',
     zones: {
@@ -173,7 +177,7 @@ const presets = [
     },
   },
   {
-    name: 'Botanical',
+    name: 'Fern',
     caseColor: '#3c4a3a',
     caseFinish: 'matte',
     zones: {
@@ -187,7 +191,7 @@ const presets = [
     },
   },
   {
-    name: 'Modern Dolch',
+    name: 'Ember Grey',
     caseColor: '#1f1f1f',
     caseFinish: 'matte',
     zones: {
@@ -201,7 +205,7 @@ const presets = [
     },
   },
   {
-    name: 'Mizu',
+    name: 'Tide',
     caseColor: '#d4e0ea',
     caseFinish: 'matte',
     zones: {
@@ -215,7 +219,7 @@ const presets = [
     },
   },
   {
-    name: 'Hammerhead',
+    name: 'Harbor',
     caseColor: '#1a2a30',
     caseFinish: 'matte',
     zones: {

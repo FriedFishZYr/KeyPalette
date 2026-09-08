@@ -1,72 +1,52 @@
+import { mix } from '../../utils/colorUtils.js';
+
 const PADDING = 8;
 
-export default function Case({ width, height, caseColor, caseFinish, filterId }) {
+export default function Case({ width, height, caseColor, caseFinish, filterId, boardId, plate = false }) {
   const x = -PADDING;
   const y = -PADDING;
   const caseW = width + PADDING * 2;
   const caseH = height + PADDING * 2;
   const isGloss = caseFinish === 'gloss';
+  // Gradient ids are per board so two boards in comparison mode never share
+  // (and therefore never duplicate) an element id.
+  const glossId = `case-gloss-${boardId}`;
+  const matteId = `case-matte-${boardId}`;
+  // The plate is the darker floor visible between keycaps on a real board.
+  const plateColor = mix(caseColor, '#000000', 0.28);
 
   return (
     <g>
       <defs>
         {/* Gloss reflection: white 8% at top fading out by ~40% down */}
-        <linearGradient id="case-gloss-overlay" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={glossId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#fff" stopOpacity="0.08" />
           <stop offset="40%" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
         {/* Matte depth: transparent until the lower edge, then a soft shadow */}
-        <linearGradient id="case-matte-shadow" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={matteId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#000" stopOpacity="0" />
           <stop offset="72%" stopColor="#000" stopOpacity="0" />
           <stop offset="100%" stopColor="#000" stopOpacity="0.22" />
         </linearGradient>
       </defs>
 
-      <rect
-        x={x}
-        y={y}
-        width={caseW}
-        height={caseH}
-        rx={10}
-        ry={10}
-        fill={caseColor}
-        filter={`url(#${filterId})`}
-      />
+      <rect x={x} y={y} width={caseW} height={caseH} rx={10} ry={10} fill={caseColor} filter={`url(#${filterId})`} />
 
       {isGloss ? (
         <>
-          <rect
-            x={x}
-            y={y}
-            width={caseW}
-            height={caseH}
-            rx={10}
-            ry={10}
-            fill="url(#case-gloss-overlay)"
-            pointerEvents="none"
-          />
-          <line
-            x1={x + 10}
-            y1={y + 1}
-            x2={x + caseW - 10}
-            y2={y + 1}
-            stroke="rgba(255,255,255,0.18)"
-            strokeWidth={1}
-            pointerEvents="none"
-          />
+          <rect x={x} y={y} width={caseW} height={caseH} rx={10} ry={10} fill={`url(#${glossId})`} pointerEvents="none" />
+          <line x1={x + 10} y1={y + 1} x2={x + caseW - 10} y2={y + 1} stroke="rgba(255,255,255,0.18)" strokeWidth={1} pointerEvents="none" />
         </>
       ) : (
-        <rect
-          x={x}
-          y={y}
-          width={caseW}
-          height={caseH}
-          rx={10}
-          ry={10}
-          fill="url(#case-matte-shadow)"
-          pointerEvents="none"
-        />
+        <rect x={x} y={y} width={caseW} height={caseH} rx={10} ry={10} fill={`url(#${matteId})`} pointerEvents="none" />
+      )}
+
+      {/* Inner bezel edge. */}
+      <rect x={x + 1.5} y={y + 1.5} width={caseW - 3} height={caseH - 3} rx={9} ry={9} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={1} pointerEvents="none" />
+
+      {plate && (
+        <rect x={0} y={0} width={width} height={height} rx={4} ry={4} fill={plateColor} pointerEvents="none" />
       )}
     </g>
   );

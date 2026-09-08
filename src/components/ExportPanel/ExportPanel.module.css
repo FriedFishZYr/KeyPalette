@@ -82,3 +82,16 @@
 .download { background: var(--accent); color: #fff; }
 .hint { margin: 0 0 8px; color: var(--ws-label-muted); font-size: 13px; line-height: 1.5; }
 .divider { width: 100%; border: 0; border-top: 1px solid var(--ws-input-border); margin: 12px 0; }
+.shareUrl {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--ws-input-border);
+  border-radius: 6px;
+  background: var(--ws-input-bg);
+  color: var(--ws-label);
+  font-family: 'SF Mono', 'Menlo', ui-monospace, monospace;
+  font-size: 11px;
+  box-sizing: border-box;
+}
+.option { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ws-label-muted); cursor: pointer; }
+.option input { accent-color: var(--accent); margin: 0; }

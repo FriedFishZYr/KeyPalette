@@ -1,79 +1,72 @@
-import { contrastText, shadeTowardContrast } from '../../utils/colorUtils.js';
+import { memo } from 'react';
+import { contrastText, darken, lighten } from '../../utils/colorUtils.js';
+import { keyPolygon, roundedPath, keyTopBox, keyBox } from '../../utils/keyShapes.js';
 import styles from './Keyboard.module.css';
 
 const GAP = 4;
+const R_OUTER = 6;
+const R_TOP = 4;
 
-export default function KeyCap({
+function KeyCap({
   keyData,
   unit,
   color,
   selected,
   onClick,
+  onFocusKey,
+  registerRef,
+  tabIndex,
   profile,
+  rowFromBottom = 0,
   dishId,
   liftId,
   legendColor = 'auto',
   legendPosition = 'top',
   interactive = true,
 }) {
-  const x = keyData.x * unit + GAP / 2;
-  const y = keyData.y * unit + GAP / 2;
-  const w = keyData.w * unit - GAP;
-  const h = keyData.h * unit - GAP;
-
-  // Profile shading (V3 §5): non-flat profiles render a layered cap — a shaded
-  // sidewall (full footprint) with a smaller top surface inset from it, more
-  // sidewall at the front (`frontExtra`) for a slight downward viewing angle.
-  // Flat (the default) short-circuits to a single rounded rect (clean 2D).
+  const box = keyBox(keyData, unit, GAP);
   const isFlat = !!profile.flat;
   const inset = isFlat ? 0 : profile.inset;
-  const frontExtra = isFlat ? 0 : profile.frontExtra;
-  const topX = x + inset;
-  const topY = y + inset;
-  const topW = w - inset * 2;
-  const topH = h - inset * 2 - frontExtra;
-  const sidewallColor = isFlat ? color : shadeTowardContrast(color, profile.wallDarken);
+  // Sculpted profiles show more front face the further back the row sits.
+  const frontExtra = isFlat ? 0 : Math.round(profile.frontExtra * (1 + (profile.rowSlope ?? 0) * rowFromBottom));
 
-  // Legend color (V3 §6): "auto" picks per-key contrast (white on dark caps,
-  // black on light), otherwise a fixed hex for every legend.
+  const outerPath = roundedPath(keyPolygon(keyData, unit, GAP), R_OUTER);
+  const topInsets = { top: inset, side: inset, bottom: inset + frontExtra };
+  const topPath = isFlat ? outerPath : roundedPath(keyPolygon(keyData, unit, GAP, topInsets), R_TOP);
+  const topBox = keyTopBox(keyData, unit, GAP, topInsets);
+
+  // Shading: walls sit in shadow, the front face catches a little more light,
+  // and the top is lifted slightly so depth reads even on black caps.
+  const wallColor = isFlat ? color : darken(color, profile.wallDarken);
+  const frontColor = isFlat ? color : darken(color, profile.frontDarken);
+  const topColor = isFlat ? color : lighten(color, profile.topLift);
+
+  // Legend color: "auto" picks per-key contrast (white on dark caps, black on
+  // light), otherwise a fixed hex for every legend.
   const labelColor = legendColor === 'auto' ? contrastText(color) : legendColor;
 
-  // Legend placement. Flat keeps V2 parity (bottom-left, left-aligned). The 3D
-  // profiles use the V3 treatment: centered on the top surface, or on the
-  // front sidewall band (smaller font) when legendPosition is "front".
-  const baseFont = w < 40 ? 9 : 11;
+  // Legend placement. Flat keeps the bottom-left placement; shaded profiles
+  // center the legend on the top surface, or on the front face when
+  // legendPosition is "front".
+  const baseFont = box.w < 40 ? 9 : 11;
   const onFront = !isFlat && legendPosition === 'front';
-  let labelX;
-  let labelY;
-  let labelAnchor;
-  let labelBaseline;
-  let labelFont;
+  let label;
   if (isFlat) {
-    labelX = x + 6;
-    labelY = y + h - 8;
-    labelAnchor = 'start';
-    labelBaseline = 'auto';
-    labelFont = baseFont;
+    label = { x: box.x + 6, y: box.y + box.h - 8, anchor: 'start', baseline: 'auto', font: baseFont };
   } else if (onFront) {
-    labelX = x + w / 2;
-    labelY = y + h - (inset + frontExtra) / 2;
-    labelAnchor = 'middle';
-    labelBaseline = 'central';
-    labelFont = Math.max(6, baseFont - 3);
+    label = {
+      x: box.x + box.w / 2, y: box.y + box.h - (inset + frontExtra) / 2 - 0.5,
+      anchor: 'middle', baseline: 'central', font: Math.max(6, baseFont - 3),
+    };
   } else {
-    labelX = topX + topW / 2;
-    labelY = topY + topH / 2;
-    labelAnchor = 'middle';
-    labelBaseline = 'central';
-    labelFont = baseFont;
+    label = { x: topBox.x + topBox.w / 2, y: topBox.y + topBox.h / 2, anchor: 'middle', baseline: 'central', font: baseFont };
   }
 
   const handleClick = (e) => {
     // Stop the click reaching the canvas background handler, which clears the
-    // selection (V3 §4) — without this, selecting a key would instantly
-    // deselect it.
+    // selection — without this, selecting a key would instantly deselect it.
     e.stopPropagation();
-    onClick?.(keyData.id, e.shiftKey);
+    onClick?.(keyData.id, { additive: e.shiftKey, sameColor: e.altKey });
   };
 
   return (
@@ -81,121 +74,82 @@ export default function KeyCap({
       className={interactive ? styles.keycap : undefined}
       onClick={interactive ? handleClick : undefined}
       role={interactive ? 'button' : undefined}
-      tabIndex={interactive ? 0 : undefined}
+      tabIndex={interactive ? tabIndex : undefined}
       aria-label={interactive ? `${keyData.label} key, ${color}` : undefined}
       aria-pressed={interactive ? selected : undefined}
+      onFocus={interactive ? () => onFocusKey?.(keyData.id) : undefined}
+      ref={interactive ? (el) => registerRef?.(keyData.id, el) : undefined}
       onKeyDown={interactive ? (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault(); handleClick(event);
+          event.preventDefault();
+          handleClick(event);
         }
       } : undefined}
     >
-      {isFlat ? (
-        /* Flat (default): a single rounded rect in the true color, V2 border,
-           lift shadow when selected. */
-        <rect
-          x={x}
-          y={y}
-          width={w}
-          height={h}
-          rx={6}
-          ry={6}
-          fill={color}
-          filter={selected ? `url(#${liftId})` : undefined}
-          className={styles.keyRect}
-        />
-      ) : (
+      {!isFlat && (
+        /* Soft contact shadow under the cap. */
+        <path d={outerPath} className={styles.keyShadow} transform="translate(0 2)" />
+      )}
+      {/* Sidewall (or the whole flat cap): keeps the key border and the lift
+          shadow when selected. */}
+      <path
+        d={outerPath}
+        fill={wallColor}
+        filter={selected ? `url(#${liftId})` : undefined}
+        className={styles.keyRect}
+      />
+      {!isFlat && (
         <>
-          {/* Sidewall — full footprint, shaded for depth; keeps the V2 key
-              border and the lift shadow when selected. */}
+          {/* Front face — the band below the top surface. */}
           <rect
-            x={x}
-            y={y}
-            width={w}
-            height={h}
-            rx={6}
-            ry={6}
-            fill={sidewallColor}
-            filter={selected ? `url(#${liftId})` : undefined}
-            className={styles.keyRect}
+            x={box.x + inset}
+            y={box.y + box.h - inset - frontExtra}
+            width={box.w - inset * 2}
+            height={frontExtra + inset - 1}
+            rx={2}
+            fill={frontColor}
           />
-          {/* Top surface — the key's true color. */}
-          <rect x={topX} y={topY} width={topW} height={topH} rx={4} ry={4} fill={color} />
+          {/* Top surface — the key's true color, slightly lifted. */}
+          <path d={topPath} fill={topColor} />
           {/* Dish overlay — a color-independent light→dark gradient declared
               once in Keyboard's <defs>, mapped to each top surface's bbox. */}
-          <rect
-            x={topX}
-            y={topY}
-            width={topW}
-            height={topH}
-            rx={4}
-            ry={4}
-            fill={`url(#${dishId})`}
-            pointerEvents="none"
-          />
-          {/* Top-edge highlight on the top surface. */}
+          <path d={topPath} fill={`url(#${dishId})`} pointerEvents="none" />
+          {/* Top-edge highlight. */}
           <line
-            x1={topX + 4}
-            y1={topY + 0.5}
-            x2={topX + topW - 4}
-            y2={topY + 0.5}
+            x1={topBox.x + 4}
+            y1={topBox.y + 0.5}
+            x2={topBox.x + topBox.w - 4}
+            y2={topBox.y + 0.5}
             className={styles.topEdge}
           />
         </>
       )}
-      {/* Hover affordance (V3 §3): a faint accent ring, only when not selected
-          so it stays visually distinct from the solid selection ring. Skipped
-          for read-only boards (comparison B). */}
+      {/* Hover affordance: a faint accent ring, only when not selected so it
+          stays visually distinct from the solid selection ring. */}
       {interactive && !selected && (
-        <rect
-          x={x - 1}
-          y={y - 1}
-          width={w + 2}
-          height={h + 2}
-          rx={7}
-          ry={7}
-          className={styles.hoverRing}
-        />
+        <path d={roundedPath(keyPolygon(keyData, unit, GAP, { top: -1, side: -1, bottom: -1 }), R_OUTER + 1)} data-hover-ring className={styles.hoverRing} />
       )}
-      {/* Selection frame (V3 §3): a bg-colored halo just outside a 2px accent
-          ring, so the selection reads over any keycap color and either theme.
-          The ring wraps the outer sidewall rect, so it's unaffected by the
-          inset top surface. */}
+      {/* Selection frame: a bg-colored halo just outside a 2px accent ring, so
+          the selection reads over any keycap color and either theme. */}
       {selected && (
         <>
-          <rect
-            x={x - 2.5}
-            y={y - 2.5}
-            width={w + 5}
-            height={h + 5}
-            rx={8.5}
-            ry={8.5}
-            data-selection-ring
-            className={styles.selectionHalo}
-          />
-          <rect
-            x={x - 1}
-            y={y - 1}
-            width={w + 2}
-            height={h + 2}
-            rx={7}
-            ry={7}
-            data-selection-ring
-            className={styles.selectionRing}
-          />
+          <path d={roundedPath(keyPolygon(keyData, unit, GAP, { top: -2.5, side: -2.5, bottom: -2.5 }), R_OUTER + 2.5)} data-selection-ring className={styles.selectionHalo} />
+          <path d={roundedPath(keyPolygon(keyData, unit, GAP, { top: -1, side: -1, bottom: -1 }), R_OUTER + 1)} data-selection-ring className={styles.selectionRing} />
         </>
       )}
       <text
-        x={labelX}
-        y={labelY}
+        x={label.x}
+        y={label.y}
         className={styles.keyLabel}
         fill={labelColor}
-        fontSize={labelFont}
-        textAnchor={labelAnchor}
-        dominantBaseline={labelBaseline}
+        fontSize={label.font}
+        textAnchor={label.anchor}
+        dominantBaseline={label.baseline}
       >
         {keyData.label}
       </text>
     </g>
   );
 }
+
+export default memo(KeyCap);

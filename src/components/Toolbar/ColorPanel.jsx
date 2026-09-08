@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import { hexToRgb, rgbToHex, rgbToHsl, hslToRgb, isValidHex } from '../../utils/colorUtils.js';
 import styles from './Toolbar.module.css';
@@ -21,12 +21,15 @@ export default function ColorPanel({
   const isMixed = activeColor === null;
   const displayColor = activeColor ?? '#e0e0e0';
   const [hexInput, setHexInput] = useState(displayColor);
+  // Reset the draft whenever the picker color changes from outside (a new
+  // selection, undo, a preset) — derived during render, no effect needed.
+  const [syncedColor, setSyncedColor] = useState(displayColor);
+  if (syncedColor !== displayColor) {
+    setSyncedColor(displayColor);
+    setHexInput(displayColor);
+  }
   const rgb = hexToRgb(displayColor);
   const hsl = rgbToHsl(rgb);
-
-  useEffect(() => {
-    setHexInput(displayColor);
-  }, [displayColor]);
 
   const handleHexInput = (value) => {
     setHexInput(value);

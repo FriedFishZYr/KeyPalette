@@ -3,10 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KeyPalette · Keycap colorway designer</title>
+    <meta name="description" content="Design and preview custom keycap colorways in your browser. Pick a layout, color keys by group or one at a time, pull colors from a photo, and share with a link. No account, no install." />
+    <meta name="theme-color" content="#111111" />
+    <meta name="color-scheme" content="dark light" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>KeyPalette</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Social previews. Scrapers need absolute URLs: prefix og:image and twitter:image with the deployed origin at launch. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KeyPalette" />
+    <meta property="og:title" content="KeyPalette · Keycap colorway designer" />
+    <meta property="og:description" content="Design and preview custom keycap colorways before you buy. Free, in the browser, no account." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="KeyPalette · Keycap colorway designer" />
+    <meta name="twitter:description" content="Design and preview custom keycap colorways before you buy. Free, in the browser, no account." />
+    <meta name="twitter:image" content="/og-image.png" />
   </head>
   <body>
+    <noscript>KeyPalette needs JavaScript to run. Please enable it and reload the page.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

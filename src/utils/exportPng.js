@@ -1,148 +1,27 @@
-// PNG export with color legend (V2 §8, V3 §11).
-//
-// Captures the keyboard DOM node with html2canvas, builds the per-zone color
-// legend as an off-screen DOM element captured separately, then composites
-// both onto a single canvas via drawImage and triggers a download. The final
-// canvas is painted with the current --ws-bg value (never transparent).
-//
-// In comparison mode (V3 §11) both boards (A above B) and both legends are
-// stacked onto one canvas.
-
-import html2canvas from 'html2canvas';
+// PNG and SVG downloads. The board is rasterised from its own SVG at 2x, then
+// a per-zone color legend is painted beneath it. Comparison mode stacks board
+// A + legend above board B + legend.
 import { ZONES } from '../data/zones.js';
 import layouts from '../data/layouts/index.js';
-import { DEFAULT_KEY_COLOR } from '../hooks/useColorway.js';
+import { DEFAULT_KEY_COLOR } from './designStore.js';
+import { boardToSvg, canvasToBlob, readBoardTokens, svgToCanvas } from './exportSvg.js';
+import { downloadBlob, downloadText, slugify } from './download.js';
 
 // Render at 2x for crisp output on hi-dpi displays.
 const SCALE = 2;
 const PAD = 24;
 const BOARD_LEGEND_GAP = 16;
 
-function resolveSvg(boardEl) {
-  const svgEl =
-    boardEl.tagName.toLowerCase() === 'svg' ? boardEl : boardEl.querySelector('svg');
-  if (!svgEl) throw new Error('Keyboard SVG not available');
-  return svgEl;
-}
+// Legend geometry in CSS px (scaled when painted).
+const LEGEND = {
+  labelSize: 14, labelGap: 8, swatch: 20, hexSize: 11, hexGap: 4,
+  itemWidth: 58, itemGap: 12, rowGap: 10, zoneGap: 16,
+};
+const ROW_HEIGHT = LEGEND.swatch + LEGEND.hexGap + LEGEND.hexSize + LEGEND.rowGap;
 
-function readTokens(svgEl) {
-  const cs = getComputedStyle(svgEl);
-  return {
-    bg: cs.getPropertyValue('--ws-bg').trim() || '#111111',
-    labelColor: cs.getPropertyValue('--ws-label').trim() || '#e8e8e8',
-    borderColor:
-      cs.getPropertyValue('--ws-key-border').trim() || 'rgba(255,255,255,0.12)',
-  };
-}
-
-// Capture a board wrapper. Transparent background — the composite paints
-// --ws-bg. Transient selection rings are skipped via the data marker.
-function captureBoard(boardEl) {
-  return html2canvas(boardEl, {
-    backgroundColor: null,
-    scale: SCALE,
-    logging: false,
-    ignoreElements: (el) =>
-      typeof el.hasAttribute === 'function' && el.hasAttribute('data-selection-ring'),
-  });
-}
-
-// Build the legend off-screen (sized to its board's width) and capture it.
-async function captureLegend(boardLike, svgEl, { labelColor, borderColor }) {
-  const boardWidthPx = parseFloat(svgEl.getAttribute('width'));
-  const legendEl = buildLegendElement(boardLike, { labelColor, borderColor, boardWidthPx });
-  document.body.appendChild(legendEl);
-  try {
-    return await html2canvas(legendEl, {
-      backgroundColor: null,
-      scale: SCALE,
-      logging: false,
-    });
-  } finally {
-    legendEl.remove();
-  }
-}
-
-export async function exportPng(boardEl, state) {
-  if (!boardEl) throw new Error('Keyboard not available');
-
-  const svgEl = resolveSvg(boardEl);
-  const tokens = readTokens(svgEl);
-
-  const boardCanvas = await captureBoard(boardEl);
-  const legendCanvas = await captureLegend(state, svgEl, tokens);
-
-  // Composite board + legend onto one canvas over the workspace background.
-  const pad = PAD * SCALE;
-  const gap = BOARD_LEGEND_GAP * SCALE;
-  const contentW = Math.max(boardCanvas.width, legendCanvas.width);
-
-  const out = document.createElement('canvas');
-  out.width = contentW + pad * 2;
-  out.height = pad + boardCanvas.height + gap + legendCanvas.height + pad;
-
-  const ctx = out.getContext('2d');
-  ctx.fillStyle = tokens.bg;
-  ctx.fillRect(0, 0, out.width, out.height);
-  ctx.drawImage(boardCanvas, pad, pad);
-  ctx.drawImage(legendCanvas, pad, pad + boardCanvas.height + gap);
-
-  const url = out.toDataURL('image/png');
-  triggerDownload(url, `${slugify(state.colorwayName)}-${state.layout}.png`);
-}
-
-// Comparison export (V3 §11): A board + legend stacked above B board + legend.
-// `state.comparison.board` supplies B. Filename: {aName}-vs-{bName}.png.
-export async function exportComparisonPng(boardElA, boardElB, state) {
-  if (!boardElA || !boardElB) throw new Error('Both comparison boards must be available');
-  const b = state.comparison?.board;
-  if (!b) throw new Error('No comparison board (B) set');
-
-  const svgA = resolveSvg(boardElA);
-  const svgB = resolveSvg(boardElB);
-  const tokens = readTokens(svgA);
-
-  const aBoard = await captureBoard(boardElA);
-  const aLegend = await captureLegend(state, svgA, tokens);
-  const bBoard = await captureBoard(boardElB);
-  const bLegend = await captureLegend(b, svgB, tokens);
-
-  const pad = PAD * SCALE;
-  const gap = BOARD_LEGEND_GAP * SCALE;
-  const sectionGap = PAD * 2 * SCALE; // larger gap between the A and B blocks
-  const contentW = Math.max(aBoard.width, aLegend.width, bBoard.width, bLegend.width);
-
-  const out = document.createElement('canvas');
-  out.width = contentW + pad * 2;
-  out.height =
-    pad +
-    aBoard.height + gap + aLegend.height +
-    sectionGap +
-    bBoard.height + gap + bLegend.height +
-    pad;
-
-  const ctx = out.getContext('2d');
-  ctx.fillStyle = tokens.bg;
-  ctx.fillRect(0, 0, out.width, out.height);
-
-  let y = pad;
-  ctx.drawImage(aBoard, pad, y);
-  y += aBoard.height + gap;
-  ctx.drawImage(aLegend, pad, y);
-  y += aLegend.height + sectionGap;
-  ctx.drawImage(bBoard, pad, y);
-  y += bBoard.height + gap;
-  ctx.drawImage(bLegend, pad, y);
-
-  const url = out.toDataURL('image/png');
-  triggerDownload(url, `${slugify(state.colorwayName)}-vs-${slugify(b.name)}.png`);
-}
-
-// ── Legend ───────────────────────────────────────────────────────────────
-
-// One entry per zone present in the layout, each with the unique colors used in
-// that zone in first-seen order, ordered by the ZONES declaration.
-function collectZones(layout, keyColors) {
+// One entry per zone present in the layout, each with the unique colors used
+// in that zone in first-seen order, ordered by the ZONES declaration.
+export function collectZones(layout, keyColors) {
   const keys = layouts[layout] ?? [];
   const byZone = new Map();
   for (const k of keys) {
@@ -153,99 +32,128 @@ function collectZones(layout, keyColors) {
   }
   const result = [];
   for (const zoneKey of Object.keys(ZONES)) {
-    if (byZone.has(zoneKey)) {
-      result.push({ label: ZONES[zoneKey].label, colors: byZone.get(zoneKey) });
-    }
+    if (byZone.has(zoneKey)) result.push({ label: ZONES[zoneKey].label, colors: byZone.get(zoneKey) });
   }
   return result;
 }
 
-// Build the off-screen legend DOM. Constrained to the board width so swatch
-// rows wrap to roughly the same footprint as the keyboard above them. `board`
-// is any object with { layout, keyColors } (live state or a B snapshot).
-function buildLegendElement(board, { labelColor, borderColor, boardWidthPx }) {
-  const zones = collectZones(board.layout, board.keyColors);
-
-  const root = document.createElement('div');
-  Object.assign(root.style, {
-    position: 'absolute',
-    left: '-9999px',
-    top: '0',
-    width: `${boardWidthPx}px`,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    background: 'transparent',
-  });
-
+// Wraps swatch rows to the board width; returns blocks with y offsets (CSS px).
+export function layoutLegend(zones, width) {
+  const perRow = Math.max(1, Math.floor((width + LEGEND.itemGap) / (LEGEND.itemWidth + LEGEND.itemGap)));
+  const blocks = [];
+  let y = 0;
   for (const zone of zones) {
-    const block = document.createElement('div');
-    Object.assign(block.style, { display: 'flex', flexDirection: 'column', gap: '8px' });
-
-    const label = document.createElement('div');
-    label.textContent = zone.label;
-    Object.assign(label.style, { color: labelColor, fontWeight: '600', fontSize: '14px' });
-    block.appendChild(label);
-
-    const row = document.createElement('div');
-    Object.assign(row.style, { display: 'flex', flexWrap: 'wrap', gap: '14px' });
-
-    for (const color of zone.colors) {
-      const item = document.createElement('div');
-      Object.assign(item.style, {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '4px',
-      });
-
-      const swatch = document.createElement('div');
-      Object.assign(swatch.style, {
-        width: '20px',
-        height: '20px',
-        background: color,
-        border: `1px solid ${borderColor}`,
-        borderRadius: '4px',
-        boxSizing: 'border-box',
-      });
-
-      const hex = document.createElement('div');
-      hex.textContent = color.toUpperCase();
-      Object.assign(hex.style, {
-        fontSize: '11px',
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-        color: labelColor,
-      });
-
-      item.appendChild(swatch);
-      item.appendChild(hex);
-      row.appendChild(item);
-    }
-
-    block.appendChild(row);
-    root.appendChild(block);
+    const rows = Math.ceil(zone.colors.length / perRow);
+    blocks.push({ label: zone.label, colors: zone.colors, y, perRow });
+    y += LEGEND.labelSize + LEGEND.labelGap + rows * ROW_HEIGHT + LEGEND.zoneGap;
   }
-
-  return root;
+  return { blocks, height: Math.max(0, y - LEGEND.zoneGap) };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-function triggerDownload(href, filename) {
-  const a = document.createElement('a');
-  a.href = href;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
-function slugify(name) {
-  const slug = (name || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return slug || 'colorway';
+function paintLegend(ctx, legend, x0, y0, scale, { labelColor, borderColor }) {
+  const s = (v) => v * scale;
+  for (const block of legend.blocks) {
+    let y = y0 + s(block.y);
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = labelColor;
+    ctx.font = `600 ${s(LEGEND.labelSize)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(block.label, x0, y);
+    y += s(LEGEND.labelSize + LEGEND.labelGap);
+    block.colors.forEach((color, i) => {
+      const col = i % block.perRow;
+      const row = Math.floor(i / block.perRow);
+      const x = x0 + col * s(LEGEND.itemWidth + LEGEND.itemGap);
+      const yy = y + row * s(ROW_HEIGHT);
+      const sx = x + (s(LEGEND.itemWidth) - s(LEGEND.swatch)) / 2;
+      roundRect(ctx, sx, yy, s(LEGEND.swatch), s(LEGEND.swatch), s(4));
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = Math.max(1, scale);
+      ctx.stroke();
+      ctx.fillStyle = labelColor;
+      ctx.font = `${s(LEGEND.hexSize)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(color.toUpperCase(), x + s(LEGEND.itemWidth) / 2, yy + s(LEGEND.swatch + LEGEND.hexGap));
+      ctx.textAlign = 'left';
+    });
+  }
+}
+
+async function renderBoard(boardEl) {
+  return svgToCanvas(boardToSvg(boardEl, { scale: SCALE }));
+}
+
+export async function exportPng(boardEl, state, { transparent = false } = {}) {
+  const tokens = readBoardTokens(boardEl);
+  const board = await renderBoard(boardEl);
+  const legend = layoutLegend(collectZones(state.layout, state.keyColors), board.width / SCALE);
+  const pad = PAD * SCALE;
+  const gap = BOARD_LEGEND_GAP * SCALE;
+
+  const out = document.createElement('canvas');
+  out.width = board.width + pad * 2;
+  out.height = pad + board.height + gap + legend.height * SCALE + pad;
+  const ctx = out.getContext('2d');
+  if (!transparent) {
+    ctx.fillStyle = tokens.bg;
+    ctx.fillRect(0, 0, out.width, out.height);
+  }
+  ctx.drawImage(board, pad, pad);
+  paintLegend(ctx, legend, pad, pad + board.height + gap, SCALE, tokens);
+  downloadBlob(await canvasToBlob(out), `${slugify(state.colorwayName)}-${state.layout}.png`);
+}
+
+// Comparison export: A board + legend stacked above B board + legend.
+export async function exportComparisonPng(boardElA, boardElB, state, { transparent = false } = {}) {
+  if (!boardElA || !boardElB) throw new Error('Both comparison boards must be available');
+  const b = state.comparison?.board;
+  if (!b) throw new Error('No comparison board set');
+  const tokens = readBoardTokens(boardElA);
+  const [aBoard, bBoard] = await Promise.all([renderBoard(boardElA), renderBoard(boardElB)]);
+  const aLegend = layoutLegend(collectZones(state.layout, state.keyColors), aBoard.width / SCALE);
+  const bLegend = layoutLegend(collectZones(b.layout, b.keyColors), bBoard.width / SCALE);
+  const pad = PAD * SCALE;
+  const gap = BOARD_LEGEND_GAP * SCALE;
+  const sectionGap = PAD * 2 * SCALE;
+
+  const out = document.createElement('canvas');
+  out.width = Math.max(aBoard.width, bBoard.width) + pad * 2;
+  out.height = pad + aBoard.height + gap + aLegend.height * SCALE + sectionGap
+    + bBoard.height + gap + bLegend.height * SCALE + pad;
+  const ctx = out.getContext('2d');
+  if (!transparent) {
+    ctx.fillStyle = tokens.bg;
+    ctx.fillRect(0, 0, out.width, out.height);
+  }
+  let y = pad;
+  ctx.drawImage(aBoard, pad, y);
+  y += aBoard.height + gap;
+  paintLegend(ctx, aLegend, pad, y, SCALE, tokens);
+  y += aLegend.height * SCALE + sectionGap;
+  ctx.drawImage(bBoard, pad, y);
+  y += bBoard.height + gap;
+  paintLegend(ctx, bLegend, pad, y, SCALE, tokens);
+  downloadBlob(await canvasToBlob(out), `${slugify(state.colorwayName)}-vs-${slugify(b.name)}.png`);
+}
+
+export function exportSvg(boardEl, state, { transparent = false } = {}) {
+  const tokens = readBoardTokens(boardEl);
+  const svg = boardToSvg(boardEl, { scale: 1, background: transparent ? null : tokens.bg });
+  downloadText(svg, `${slugify(state.colorwayName)}-${state.layout}.svg`, 'image/svg+xml');
 }

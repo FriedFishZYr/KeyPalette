@@ -2,6 +2,43 @@
 
 ---
 
+## 3.1.0 — Unreleased
+
+**Theme:** Launch readiness. Everything a public release needs short of hosting: safer storage, shareable links, more layouts, a more convincing render, exports without a DOM-capture library, and a real test and lint setup.
+
+### Added
+- **Share links** — the whole design is deflated into the URL hash (`#d=z.…`, ~600 characters for a TKL). Opening a link adds the design as a new saved design, or replaces the current one undoably when all five slots are used.
+- **Layouts** — ISO variants of every ANSI board (L-shaped Enter), HHKB, 96% / 1800-compact, and a Planck 40% ortholinear. Key ids are shared across layouts so colors survive switching.
+- **Design management** — duplicate and delete designs from *My designs*, with an inline confirmation for delete.
+- **SVG export** and a transparent-background option for PNG and SVG. PNG export now rasterises the board's own SVG at 2x and paints the legend on a canvas.
+- **Keyboard access to the board** — one tab stop, arrow keys move between keys (Home/End to row ends), Enter/Space select, Shift adds to the selection.
+- **Alt-click / “Same color”** — select every key sharing a color, for recoloring accent sets.
+- **First-run guidance** card, an **About** dialog (privacy statement, shortcuts, backup download), and copy feedback on the hex badge.
+- **Error boundary** with a reload and a “download saved designs” escape hatch.
+- **Storage safety** — unreadable saved data is moved to a timestamped backup key and offered for download instead of being overwritten; invalid fields are repaired one at a time.
+- **Metadata** — description, theme color, Open Graph and Twitter tags, a web app manifest and icons, a `noscript` message, and a `LICENSE` file (MIT).
+- **Tooling** — Vitest with React Testing Library (41 tests: history, storage, layouts, share links, legend layout, and app flows), ESLint 10 with the React hooks rules, Prettier, EditorConfig, `.nvmrc`, and `npm run check`.
+
+### Changed
+- **Keycap rendering** — walls are always darker than the top, the front face is lit separately, the top is lifted slightly so black caps show depth, sculpted profiles show more front face toward the back rows, each cap has a contact shadow, and a darker plate shows between keys. Flat stays the clean 2D default.
+- **Case and Lettering** use the same picker as Keycaps; Lettering has an Auto / Custom switch.
+- **Narrow screens** — the board keeps a tappable minimum size and the canvas scrolls; the header actions scroll horizontally instead of wrapping onto three rows.
+- **Saving** is debounced and flushed when the tab is hidden; the status text no longer flickers.
+- **Preset names** are original (Neon Coast, Blush, Circuit, Fern, Ember Grey, Tide, Harbor) instead of reusing keycap-set product names.
+- **Header** — the Download button is now Share, opening a share-or-download dialog.
+- `package.json` carries real metadata, version 3.1.0, MIT license, and an engines field.
+
+### Fixed
+- Duplicate SVG gradient ids when two boards are on screen in comparison mode.
+- Escape now closes dialogs even where the browser skips the `cancel` event.
+- Rules-of-hooks violations flagged by the React compiler lint rules.
+
+### Removed
+- `html2canvas` (unmaintained; ~200 KB). The production bundle dropped from 473 KB to 300 KB.
+- The unused `saveSlot` action.
+
+---
+
 ## Editor refinement — Unreleased
 
 - Preserves the existing neutral workspace and keyboard rendering while grouping editing controls into Keycaps, Case, and Lettering.

@@ -57,8 +57,9 @@
 @media (max-width: 768px) {
   .app { height: auto; min-height: 100dvh; overflow: visible; }
   .workspace { flex-direction: column; }
-  .main { order: -1; flex: none; height: 300px; }
-  .canvas { padding: 16px; }
+  .main { order: -1; flex: none; }
+  /* The board keeps a tappable minimum scale and the canvas scrolls instead. */
+  .canvas { padding: 16px; justify-content: safe center; overflow: auto; min-height: 180px; max-height: 52dvh; -webkit-overflow-scrolling: touch; }
   .canvasHint { font-size: 11px; padding-bottom: 12px; }
 }
 

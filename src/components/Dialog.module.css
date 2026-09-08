@@ -16,3 +16,4 @@
 .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .header h2 { margin: 0; font-size: 16px; font-weight: 600; }
 .header button { width: 32px; height: 32px; border: 1px solid var(--ws-input-border); border-radius: 6px; background: transparent; color: var(--ws-label); font-size: 22px; cursor: pointer; }
+.wide { width: min(760px, calc(100% - 32px)); }

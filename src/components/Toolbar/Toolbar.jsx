@@ -2,6 +2,7 @@ import { useState } from 'react';
 import LayoutSelector from './LayoutSelector.jsx';
 import ZonePanel from './ZonePanel.jsx';
 import ColorPanel from './ColorPanel.jsx';
+import InlineColorPicker from './InlineColorPicker.jsx';
 import presets from '../../data/presets.js';
 import { PROFILES, PROFILE_ORDER } from '../../data/profiles.js';
 import styles from './Toolbar.module.css';
@@ -11,6 +12,7 @@ const TABS = ['Keycaps', 'Case', 'Lettering'];
 export default function Toolbar({ state, actions, slots = [], onExtractFromImage }) {
   const [tab, setTab] = useState('Keycaps');
   const count = state.selectedKeys.length;
+  const legendIsAuto = state.legendColor === 'auto';
   return (
     <aside className={styles.toolbar} aria-label="Keyboard editor">
       <LayoutSelector current={state.layout} onSelect={actions.setLayout} />
@@ -33,7 +35,11 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
         {tab === 'Keycaps' && <>
           <div className={styles.selectionSummary}>
             <span role="status">{count ? `Editing ${count} ${count === 1 ? 'key' : 'keys'}` : 'Select keys to start'}</span>
-            {count > 0 && <button type="button" onClick={actions.clearSelection}>Clear</button>}
+            <span className={styles.selectionActions}>
+              {count === 1 && <button type="button" onClick={() => actions.selectSameColor(state.selectedKeys[0])}
+                title="Select every key with this color">Same color</button>}
+              {count > 0 && <button type="button" onClick={actions.clearSelection}>Clear</button>}
+            </span>
           </div>
           <ZonePanel state={state} onSelectZone={actions.selectZone} />
           <ColorPanel activeColor={state.activeColor} onColorChange={actions.setActiveColor}
@@ -52,13 +58,9 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
         </>}
         {tab === 'Case' && <>
           <h3 className={styles.sectionTitle}>Case color</h3>
-          <p className={styles.help}>Changes apply to the whole case.</p>
-          <div className={styles.caseColorRow}>
-            <input type="color" className={styles.caseSwatch} value={state.caseColor}
-              onFocus={actions.beginEdit} onBlur={actions.endEdit}
-              onChange={(event) => actions.setCaseColor(event.target.value)} aria-label="Case color" />
-            <span className={styles.caseHex}>{state.caseColor}</span>
-          </div>
+          <p className={styles.help}>Changes apply to the whole case as you pick.</p>
+          <InlineColorPicker color={state.caseColor} onChange={actions.setCaseColor}
+            onBeginEdit={actions.beginEdit} onEndEdit={actions.endEdit} ariaLabel="Case color picker" />
           <h3 className={styles.sectionTitle}>Finish</h3>
           <div className={styles.segmented} role="group" aria-label="Case finish">
             {['matte', 'gloss'].map((finish) => <button type="button" key={finish}
@@ -68,14 +70,17 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
         </>}
         {tab === 'Lettering' && <>
           <h3 className={styles.sectionTitle}>Lettering color</h3>
-          <p className={styles.help}>Applies to all key labels. Auto chooses light or dark text for each key.</p>
-          <div className={styles.caseColorRow}>
-            <input type="color" className={styles.caseSwatch} value={state.legendColor === 'auto' ? '#cccccc' : state.legendColor}
-              onFocus={actions.beginEdit} onBlur={actions.endEdit}
-              onChange={(event) => actions.setLegendColor(event.target.value)} aria-label="Lettering color" />
-            <button type="button" className={`${styles.autoBtn} ${state.legendColor === 'auto' ? styles.autoBtnActive : ''}`}
-              aria-pressed={state.legendColor === 'auto'} onClick={() => actions.setLegendColor('auto')}>Auto</button>
+          <p className={styles.help}>Auto picks light or dark text for each key. Custom uses one color everywhere.</p>
+          <div className={styles.segmented} role="group" aria-label="Lettering color mode">
+            <button type="button" className={`${styles.segmentBtn} ${legendIsAuto ? styles.segmentBtnActive : ''}`}
+              aria-pressed={legendIsAuto} onClick={() => actions.setLegendColor('auto')}>Auto</button>
+            <button type="button" className={`${styles.segmentBtn} ${!legendIsAuto ? styles.segmentBtnActive : ''}`}
+              aria-pressed={!legendIsAuto} onClick={() => { if (legendIsAuto) actions.setLegendColor('#ffffff'); }}>Custom</button>
           </div>
+          {!legendIsAuto && (
+            <InlineColorPicker color={state.legendColor} onChange={actions.setLegendColor}
+              onBeginEdit={actions.beginEdit} onEndEdit={actions.endEdit} ariaLabel="Lettering color picker" />
+          )}
           <h3 className={styles.sectionTitle}>Position</h3>
           <div className={styles.segmented} role="group" aria-label="Lettering position">
             {['top', 'front'].map((position) => <button type="button" key={position}

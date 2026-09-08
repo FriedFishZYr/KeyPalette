@@ -12,9 +12,31 @@ export function initialHistory(present) {
   return { present, histories: {}, grouping: false, recorded: false };
 }
 
+// Removing a design shifts every later design down one index, so their
+// histories move with them. The active design stays active unless it was the
+// one removed, in which case its nearest neighbour takes over. The last
+// remaining design cannot be removed.
+function deleteSlot(state, index) {
+  const { slots, active } = state.present;
+  if (!Number.isInteger(index) || index < 0 || index >= slots.length || slots.length <= 1) return state;
+  const nextSlots = slots.filter((_, i) => i !== index);
+  const nextActive = active > index ? active - 1 : Math.min(active, nextSlots.length - 1);
+  const histories = {};
+  for (const [key, value] of Object.entries(state.histories)) {
+    const i = Number(key);
+    if (i === index) continue;
+    histories[i > index ? i - 1 : i] = value;
+  }
+  return {
+    present: { ...state.present, active: nextActive, slots: nextSlots },
+    histories, grouping: false, recorded: false,
+  };
+}
+
 export function designHistoryReducer(state, action) {
   if (action.type === 'begin') return { ...state, grouping: true, recorded: false };
   if (action.type === 'end') return { ...state, grouping: false, recorded: false };
+  if (action.type === 'deleteSlot') return deleteSlot(state, action.index);
   const index = state.present.active;
   const history = state.histories[index] ?? empty();
   if (action.type === 'undo' || action.type === 'redo') {

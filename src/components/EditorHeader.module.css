@@ -1,4 +1,5 @@
-.header { display: flex; align-items: center; gap: 18px; padding: 12px 18px; background: var(--ws-panel); border-bottom: 1px solid var(--ws-panel-border); flex-shrink: 0; }
+.header { flex-shrink: 0; background: var(--ws-panel); border-bottom: 1px solid var(--ws-panel-border); }
+.bar { display: flex; align-items: center; gap: 18px; padding: 12px 18px; }
 .brand { font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
 .project { min-width: 130px; width: 180px; }
 .project input { display: block; width: 100%; padding: 3px 5px; background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--ws-label); font: inherit; font-size: 13px; }
@@ -12,14 +13,43 @@
 .header button:hover:not(:disabled) { background: var(--surface-hover); }
 .header button[aria-pressed="true"] { border-color: var(--ws-accent); color: var(--ws-label); }
 .header button:disabled { opacity: .35; cursor: not-allowed; }
+.header .iconBtn { width: 32px; height: 32px; padding: 0; border-radius: 50%; font-size: 14px; line-height: 1; }
 .hint { color: var(--ws-label-muted); font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+
+/* Notice strip under the bar: storage warnings, share confirmations. */
+.notice { display: flex; align-items: center; gap: 10px; padding: 8px 18px; border-top: 1px solid var(--ws-panel-border); background: var(--ws-input-bg); font-size: 12px; }
+.noticeWarning { background: rgba(217, 160, 78, .16); }
+.noticeText { flex: 1; min-width: 0; line-height: 1.4; }
+.notice .iconBtn { width: 26px; height: 26px; }
+
 .presetGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .header .preset { padding: 14px; text-align: left; display: flex; align-items: center; gap: 12px; }
 .swatches { display: flex; flex-shrink: 0; }
 .swatches span { width: 18px; height: 18px; border: 1px solid var(--ws-key-border); border-radius: 50%; margin-right: -3px; }
-.designList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-.designList button { display: flex; justify-content: space-between; gap: 12px; text-align: left; }
-.designList button span:first-child { overflow-wrap: anywhere; }
-@media (max-width: 1100px) { .header { flex-wrap: wrap; gap: 10px; } .nav { margin-left: auto; } }
-@media (max-width: 600px) { .header { padding: 10px 12px; } .project { flex: 1; } .nav { width: 100%; margin: 0; gap: 5px; } .header button { min-height: 36px; } .history { margin-left: auto; } .presetGrid { grid-template-columns: 1fr; } }
-.nav > button:last-child { width: 32px; padding: 0; border-radius: 50%; }
+
+/* My designs */
+.designList { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; padding: 0; }
+.designRow { display: flex; align-items: stretch; gap: 6px; }
+.header .designOpen { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 12px; text-align: left; }
+.designName { overflow-wrap: anywhere; }
+.header .rowAction { flex: none; color: var(--ws-label-muted); }
+.confirm { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid rgba(217, 78, 78, .45); border-radius: 6px; font-size: 12px; }
+.confirm span { flex: 1; min-width: 160px; }
+.header .danger { border-color: rgba(217, 78, 78, .6); color: rgba(217, 78, 78, .95); }
+.header .danger:hover:not(:disabled) { background: rgba(217, 78, 78, .12); }
+.designFooter { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.designFooter .hint { margin: 0; }
+
+@media (max-width: 1100px) { .bar { flex-wrap: wrap; gap: 10px; } .nav { margin-left: auto; } }
+@media (max-width: 600px) {
+  .bar { padding: 10px 12px; }
+  .project { flex: 1; }
+  .nav { width: 100%; margin: 0; gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav > * { flex: none; white-space: nowrap; }
+  .header button { min-height: 36px; }
+  .history { margin-left: auto; }
+  .presetGrid { grid-template-columns: 1fr; }
+  .designRow { flex-wrap: wrap; }
+  .header .designOpen { flex-basis: 100%; }
+}

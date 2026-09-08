@@ -1,5 +1,14 @@
 # KeyPalette — Roadmap
 
+## Status (September 2026)
+
+V1, V2, and V3 below have shipped. Version 3.1 (see CHANGELOG.md) adds share links, ISO / HHKB / 96% / Planck layouts, design duplicate and delete, SVG export, keyboard access to the board, safer storage, and the tooling needed for a public release. Still open from the lists below and from the launch review:
+
+- KLE (keyboard-layout-editor) import for arbitrary boards, and rotated layouts such as Alice
+- Per-key or per-zone legend colors
+- Community gallery and vendor color matching (both need a backend)
+- Hosting, CI, and analytics (deliberately left for launch)
+
 ## Overview
 
 Three progressive tiers. Each tier is independently shippable. V1 is the complete, usable product — V2 and V3 layer depth on top.
