@@ -17,8 +17,8 @@
   overflow: hidden;
   background: var(--ws-panel);
   border: 1px solid var(--ws-panel-border);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
 }
 
 .body {
@@ -40,7 +40,7 @@
   justify-content: center;
   overflow: hidden;
   border: 1px dashed var(--ws-input-border);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   background: var(--ws-input-bg);
   cursor: pointer;
   transition: border-color 120ms ease;
@@ -77,10 +77,8 @@
 
 .title {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--fs-lg);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--ws-label);
 }
 
@@ -95,7 +93,7 @@
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: rgba(217, 78, 78, 0.95);
+  color: var(--danger);
 }
 
 .swatchRow {
@@ -109,7 +107,7 @@
   height: 36px;
   padding: 0;
   border: 1px solid var(--ws-key-border);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: transform 100ms ease;
 }
@@ -127,41 +125,11 @@
 }
 
 .cancelBtn {
-  padding: 8px 16px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ws-label);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-
-.cancelBtn:hover {
-  background: var(--surface-hover);
+  composes: button from '../../styles/controls.module.css';
 }
 
 .applyAllBtn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  background: var(--accent);
-  color: #fff;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: opacity 120ms ease;
-}
-
-.applyAllBtn:hover {
-  opacity: 0.9;
+  composes: primary from '../../styles/controls.module.css';
 }
 
 .body { padding: 0 0 20px; }

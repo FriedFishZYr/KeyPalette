@@ -14,7 +14,7 @@ export default function Onboarding({ onTryPreset, onDismiss }) {
       </div>
       <div className={styles.actions}>
         <button type="button" className={styles.primary} onClick={onTryPreset}>Try a preset</button>
-        <button type="button" onClick={onDismiss}>Got it</button>
+        <button type="button" className={styles.secondary} onClick={onDismiss}>Got it</button>
       </div>
     </div>
   );

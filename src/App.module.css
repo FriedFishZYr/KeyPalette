@@ -5,7 +5,7 @@
   height: 100dvh;
   flex-direction: column;
   overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   background: var(--ws-bg);
   color: var(--ws-label);
 }
@@ -15,6 +15,7 @@
    the data-workspace attribute is read. [data-workspace="dark"] overrides. */
 :global(:root) {
   --ws-bg: #f0f0f0;
+  --ws-canvas-glow: #fafafa;
   --ws-panel: #ffffff;
   --ws-panel-border: rgba(0, 0, 0, 0.08);
   --ws-label: #1a1a1a;
@@ -22,38 +23,71 @@
   --ws-key-border: rgba(0, 0, 0, 0.15);
   --ws-input-bg: #f7f7f7;
   --ws-input-border: rgba(0, 0, 0, 0.1);
+  --surface-hover: rgba(0, 0, 0, 0.06);
 
-  /* Non-contrast interaction tokens (accent, hover, selection ring) */
-  --surface-hover: rgba(0, 0, 0, 0.08);
-  --accent: #2b6cb0;
-  --ring: #333;
-  /* Selection frame accent (V3 §3): one hue that reads on both #111 and #f0f0f0
-     backgrounds and over any keycap color. */
-  --ws-accent: #4f8cff;
+  /* One accent for primary actions, active states, focus and the selection
+     frame (V3 §3). --ws-accent stays as an alias for the keyboard rings. */
+  --accent: #3b7bf0;
+  --accent-hover: #2f6ad8;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(59, 123, 240, 0.12);
+  --ws-accent: var(--accent);
+  --danger: #d14343;
+  --danger-soft: rgba(209, 67, 67, 0.1);
+
+  /* Type, spacing, radius and elevation scales. */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', Menlo, ui-monospace, monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-lg: 16px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+  --control-h: 32px;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 :global([data-workspace="dark"]) {
   --ws-bg: #111111;
-  --ws-panel: #1e1e1e;
-  --ws-panel-border: rgba(255, 255, 255, 0.06);
+  --ws-canvas-glow: #262626;
+  --ws-panel: #1b1b1b;
+  --ws-panel-border: rgba(255, 255, 255, 0.07);
   --ws-label: #e8e8e8;
-  --ws-label-muted: #999999;
+  --ws-label-muted: #9a9a9a;
   --ws-key-border: rgba(255, 255, 255, 0.12);
-  --ws-input-bg: #2a2a2a;
+  --ws-input-bg: #262626;
   --ws-input-border: rgba(255, 255, 255, 0.1);
+  --surface-hover: rgba(255, 255, 255, 0.08);
 
-  --surface-hover: rgba(255, 255, 255, 0.1);
-  --accent: #4a90d9;
-  --ring: #fff;
-  --ws-accent: #4f8cff;
+  --accent: #4f8cff;
+  --accent-hover: #6a9dff;
+  --accent-soft: rgba(79, 140, 255, 0.18);
+  /* Re-declared so the alias resolves against the dark accent. */
+  --ws-accent: var(--accent);
+  --danger: #e06666;
+  --danger-soft: rgba(224, 102, 102, 0.14);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Layout ───────────────────────────────────────────────────────── */
 .workspace { display: flex; flex: 1; min-height: 0; }
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
-.canvas { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: 24px; }
-.canvasHint { padding: 0 16px 16px; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ws-label-muted); }
-:global(button:focus-visible), :global(summary:focus-visible), :global(select:focus-visible) { outline: 2px solid var(--ws-accent); outline-offset: 3px; }
+/* A soft spotlight behind the board so dark cases separate from the dark
+   workspace. Screen only: exports paint their own flat background. */
+.canvas { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: var(--sp-6); background: radial-gradient(ellipse 70% 60% at 50% 48%, var(--ws-canvas-glow), var(--ws-bg) 100%); }
+.canvasHint { padding: 0 var(--sp-4) var(--sp-4); text-align: center; font-size: var(--fs-sm); line-height: 1.5; color: var(--ws-label-muted); }
+:global(button:focus-visible), :global(summary:focus-visible), :global(select:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 768px) {
   .app { height: auto; min-height: 100dvh; overflow: visible; }
   .workspace { flex-direction: column; }
@@ -72,5 +106,5 @@
 :global(.react-colorful) {
   width: 100% !important;
   height: 144px !important;
-  border-radius: 8px !important;
+  border-radius: var(--r-md) !important;
 }

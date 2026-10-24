@@ -5,15 +5,16 @@
   max-height: calc(100dvh - 32px);
   overflow: auto;
   border: 1px solid var(--ws-input-border);
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--ws-panel);
   color: var(--ws-label);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
+  box-shadow: var(--shadow-2);
   font-family: inherit;
 }
-.dialog::backdrop { background: rgba(0, 0, 0, .6); }
+.dialog::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
 .content { padding: 22px; }
 .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-.header h2 { margin: 0; font-size: 16px; font-weight: 600; }
-.header button { width: 32px; height: 32px; border: 1px solid var(--ws-input-border); border-radius: 6px; background: transparent; color: var(--ws-label); font-size: 22px; cursor: pointer; }
+.header h2 { margin: 0; font-size: var(--fs-lg); font-weight: 600; }
+.header button { width: 32px; height: 32px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--ws-label-muted); font-size: 22px; line-height: 1; cursor: pointer; }
+.header button:hover { background: var(--surface-hover); color: var(--ws-label); }
 .wide { width: min(760px, calc(100% - 32px)); }

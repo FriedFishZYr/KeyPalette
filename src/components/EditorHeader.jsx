@@ -3,6 +3,7 @@ import Dialog from './Dialog.jsx';
 import AboutDialog from './AboutDialog.jsx';
 import ExportPanel from './ExportPanel/ExportPanel.jsx';
 import WorkspaceToggle from './WorkspaceToggle.jsx';
+import Icon from './Icon.jsx';
 import presets from '../data/presets.js';
 import { layoutLabel } from '../data/layouts/index.js';
 import { MAX_SLOTS, MAX_NAME_LENGTH } from '../utils/designStore.js';
@@ -37,7 +38,10 @@ export default function EditorHeader({
   return (
     <header className={styles.header}>
       <div className={styles.bar}>
-        <span className={styles.brand}>KeyPalette</span>
+        <span className={styles.brand}>
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="22" height="22" />
+          KeyPalette
+        </span>
         <div className={styles.project}>
           <input aria-label="Design name" value={state.colorwayName} placeholder="Untitled" maxLength={MAX_NAME_LENGTH}
             onFocus={actions.beginEdit} onChange={(event) => actions.renameDesign(event.target.value)}
@@ -46,19 +50,22 @@ export default function EditorHeader({
           <span className={status === 'error' ? styles.error : styles.status} role="status">{STATUS_TEXT[status]}</span>
         </div>
         <div className={styles.history} role="group" aria-label="Edit history">
-          <button type="button" disabled={!canUndo} onClick={actions.undo} title="Undo (⌘/Ctrl Z)">Undo</button>
-          <button type="button" disabled={!canRedo} onClick={actions.redo} title="Redo (⌘/Ctrl Shift Z)">Redo</button>
+          <button type="button" className={styles.iconBtn} disabled={!canUndo} onClick={actions.undo}
+            aria-label="Undo" title="Undo (⌘/Ctrl Z)"><Icon name="undo" /></button>
+          <button type="button" className={styles.iconBtn} disabled={!canRedo} onClick={actions.redo}
+            aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)"><Icon name="redo" /></button>
         </div>
         <nav className={styles.nav} aria-label="Design actions">
-          <button type="button" onClick={() => setPanel('designs')}>My designs</button>
-          <button type="button" onClick={() => setPanel('presets')}>Presets</button>
-          <button type="button" onClick={actions.toggleComparison} aria-pressed={state.comparison.active}>
+          <button type="button" className={styles.navBtn} onClick={() => setPanel('designs')}>My designs</button>
+          <button type="button" className={styles.navBtn} onClick={() => setPanel('presets')}>Presets</button>
+          <button type="button" className={styles.navBtn} onClick={actions.toggleComparison} aria-pressed={state.comparison.active}>
             {state.comparison.active ? 'Exit comparison' : 'Compare'}
           </button>
           <ExportPanel state={state} actions={actions} keyboardRef={keyboardRef} comparisonRefB={comparisonRefB} />
+          <span className={styles.divider} aria-hidden="true" />
           <button type="button" className={styles.iconBtn} aria-label="About KeyPalette" title="About and shortcuts"
-            onClick={() => setPanel('about')}>?</button>
-          <WorkspaceToggle workspace={state.workspace} onToggle={actions.setWorkspace} />
+            onClick={() => setPanel('about')}><Icon name="help" /></button>
+          <WorkspaceToggle className={styles.iconBtn} workspace={state.workspace} onToggle={actions.setWorkspace} />
         </nav>
       </div>
       {notice && (

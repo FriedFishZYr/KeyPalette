@@ -1,18 +1,29 @@
 .toolbar {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  width: 260px;
+  gap: var(--sp-4);
+  width: 264px;
   flex-shrink: 0;
   /* Full-height column that scrolls on its own (V3 §2); the page never does. */
   height: 100%;
-  padding: 16px;
+  padding: 0 var(--sp-4) var(--sp-4);
   box-sizing: border-box;
   overflow-y: auto;
   background: var(--ws-panel);
   border-right: 1px solid var(--ws-panel-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Layout and tabs stay in view while the panel scrolls. */
+.toolbarHead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 calc(-1 * var(--sp-4));
+  padding: var(--sp-4) var(--sp-4) 0;
+  background: var(--ws-panel);
 }
 
 /* Stacked layout on narrow viewports: full-width, no independent scroll. */
@@ -24,64 +35,23 @@
     border-right: none;
     border-bottom: 1px solid var(--ws-panel-border);
   }
+  .toolbarHead { position: static; }
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .sectionTitle {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ws-label-muted);
-}
-
-/* ── Collapsible section header (V3 §8) ───────────────────────────── */
-.sectionToggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.sectionMeta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sectionCount {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--ws-label-muted);
-}
-
-.sectionChevron {
-  font-size: 10px;
-  line-height: 1;
-  color: var(--ws-label-muted);
-  transition: color 120ms ease;
-}
-
-.sectionToggle:hover .sectionTitle,
-.sectionToggle:hover .sectionChevron,
-.sectionToggle:hover .sectionCount {
-  color: var(--ws-label);
+  composes: label from '../../styles/controls.module.css';
 }
 
 .buttonGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 /* ── Visual zone pills (V3 §7) ────────────────────────────────────── */
@@ -89,13 +59,14 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px 4px 5px;
+  min-height: 28px;
+  padding: 0 10px 0 5px;
   border: 1px solid var(--ws-input-border);
-  border-radius: 100px;
+  border-radius: var(--r-pill);
   background: transparent;
   color: var(--ws-label-muted);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
@@ -103,7 +74,6 @@
 
 .zonePill:hover:not(:disabled) {
   color: var(--ws-label);
-  border-color: var(--ws-label-muted);
   background: var(--surface-hover);
 }
 
@@ -112,19 +82,20 @@
   cursor: not-allowed;
 }
 
-/* Matches the canvas selection frame (--ws-accent) so selection reads the same
+/* Matches the canvas selection frame (--accent) so selection reads the same
    in the panel and on the board. */
 .zonePillActive {
   color: var(--ws-label);
-  border-color: var(--ws-accent);
-  box-shadow: 0 0 0 1px var(--ws-accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .zoneDot {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   border: 1px solid var(--ws-key-border);
+  box-sizing: border-box;
   flex: none;
 }
 
@@ -139,340 +110,77 @@
   );
 }
 
-/* ── Zone / Layout pills ─────────────────────────────────────────── */
-.btn {
-  padding: 5px 12px;
-  border: none;
-  border-radius: 100px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
-}
-
-.btn:hover {
-  background: var(--surface-hover);
-  color: var(--ws-label);
-}
-
-.btnActive {
-  background: var(--accent);
-  color: #fff;
-}
-
-.btnActive:hover {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* ── Apply button ─────────────────────────────────────────────────── */
+/* ── Buttons ──────────────────────────────────────────────────────── */
 .applyBtn {
-  width: 100%;
-  margin-top: 4px;
-  padding: 8px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: var(--accent);
-  color: #fff;
-  cursor: pointer;
-  transition: opacity 120ms ease;
-}
-
-.applyBtn:hover {
-  opacity: 0.9;
-}
-
-.applyBtn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* ── Reset Selected / Apply row ───────────────────────────────────── */
-.actionRow {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.actionRow .applyBtn {
+  composes: primary from '../../styles/controls.module.css';
   flex: 1;
-  margin-top: 0;
 }
 
 .resetSelectedBtn {
-  padding: 8px 12px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  composes: button from '../../styles/controls.module.css';
 }
 
-.resetSelectedBtn:hover:not(:disabled) {
-  color: var(--ws-label);
-  border-color: var(--ws-label-muted);
-  background: var(--surface-hover);
+.extractBtn {
+  composes: button from '../../styles/controls.module.css';
+  width: 100%;
 }
 
-.resetSelectedBtn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+.actionRow {
+  display: flex;
+  gap: 6px;
+  margin-top: var(--sp-1);
 }
 
 /* ── Reset All (danger) ───────────────────────────────────────────── */
 .dangerSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
   margin-top: auto;
-  padding-top: 16px;
+  padding-top: var(--sp-4);
   border-top: 1px solid var(--ws-panel-border);
 }
 
 .resetAllBtn {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid rgba(217, 78, 78, 0.45);
-  border-radius: 6px;
-  background: transparent;
-  color: rgba(217, 78, 78, 0.9);
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-
-.resetAllBtn:hover {
-  background: rgba(217, 78, 78, 0.12);
-}
-
-/* ── Presets ──────────────────────────────────────────────────────── */
-.presetGroup {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.presetPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 6px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 100px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
-}
-
-.presetPill:hover {
-  color: var(--ws-label);
-  border-color: var(--ws-label-muted);
-  background: var(--surface-hover);
-}
-
-/* Mini-preview dots: alpha / modifier / case (V3 §8). */
-.presetDots {
-  display: inline-flex;
-  gap: 2px;
-  flex: none;
-}
-
-.presetDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--ws-key-border);
-}
-
-/* ── Extract from image ───────────────────────────────────────────── */
-.extractBtn {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
-}
-
-.extractBtn:hover {
-  color: var(--ws-label);
-  border-color: var(--ws-label-muted);
-  background: var(--surface-hover);
-}
-
-/* ── Case finish ──────────────────────────────────────────────────── */
-.caseColorRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.caseSwatch {
-  width: 36px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.caseSwatch::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.caseSwatch::-webkit-color-swatch {
-  border: none;
-  border-radius: 5px;
-}
-
-.caseSwatch::-moz-color-swatch {
-  border: none;
-  border-radius: 5px;
-}
-
-.caseHex {
-  font-size: 13px;
-  font-family: 'SF Mono', 'Menlo', ui-monospace, monospace;
-  text-transform: uppercase;
-  color: var(--ws-label);
-}
-
-/* ── Legend "Auto" toggle (V3 §6) ─────────────────────────────────── */
-.autoBtn {
-  padding: 6px 14px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
-}
-
-.autoBtn:hover {
-  color: var(--ws-label);
-  border-color: var(--ws-label-muted);
-  background: var(--surface-hover);
-}
-
-.autoBtnActive {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.autoBtnActive:hover {
-  background: var(--accent);
-  color: #fff;
+  composes: danger from '../../styles/controls.module.css';
 }
 
 .segmented {
-  display: flex;
-  margin-top: 8px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  overflow: hidden;
+  composes: segmented from '../../styles/controls.module.css';
 }
 
 .segmentBtn {
-  flex: 1;
-  padding: 6px 0;
-  border: none;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
-}
-
-.segmentBtn + .segmentBtn {
-  border-left: 1px solid var(--ws-input-border);
-}
-
-.segmentBtn:hover:not(.segmentBtnActive) {
-  background: var(--surface-hover);
-  color: var(--ws-label);
+  composes: segment from '../../styles/controls.module.css';
 }
 
 .segmentBtnActive {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* ── Comparison controls (V3 §9) ──────────────────────────────────── */
-.compareControls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.compareHint {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ws-label-muted);
+  composes: segmentActive from '../../styles/controls.module.css';
 }
 
 .compareSelect {
   width: 100%;
-  padding: 6px;
+  min-height: var(--control-h);
+  padding: 0 var(--sp-2);
   border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: var(--ws-input-bg);
   color: var(--ws-label);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
 /* ── Color preview / mixed-color indicator (V2 §10) ───────────────── */
 .currentSwatch {
-  height: 28px;
-  border-radius: 6px;
+  height: 20px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--ws-key-border);
 }
 
 .mixedSwatch {
-  height: 28px;
-  border-radius: 6px;
+  height: 20px;
+  border-radius: var(--r-sm);
   border: 1px dashed var(--ws-label-muted);
   background: repeating-linear-gradient(
     45deg,
@@ -485,13 +193,13 @@
 
 .mixedNote {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--ws-label-muted);
 }
 
 /* ── Color history strip ──────────────────────────────────────────── */
 .history {
-  margin-top: 8px;
+  margin-top: var(--sp-2);
 }
 
 .historyHeader {
@@ -502,31 +210,14 @@
 }
 
 .historyLabel {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ws-label-muted);
+  composes: label from '../../styles/controls.module.css';
 }
 
 .historyClear {
-  padding: 2px 6px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-
-.historyClear:hover {
-  color: var(--ws-label);
-  background: var(--surface-hover);
+  composes: ghost from '../../styles/controls.module.css';
+  min-height: 22px;
+  padding: 0 6px;
+  font-size: var(--fs-xs);
 }
 
 .historyStrip {
@@ -536,11 +227,11 @@
 }
 
 .historySwatch {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: 1px solid var(--ws-key-border);
-  border-radius: 4px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: transform 100ms ease;
 }
@@ -551,73 +242,99 @@
 
 /* ── Color inputs ─────────────────────────────────────────────────── */
 .colorInputs {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: end;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: var(--sp-1);
 }
+
+.colorInputs select { font-family: inherit; }
 
 .colorRow {
   display: flex;
   gap: 6px;
+  min-width: 0;
 }
 
 .colorField {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   flex: 1;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  font-weight: 500;
   color: var(--ws-label-muted);
 }
 
 .input {
   width: 100%;
-  padding: 5px 6px;
+  min-height: 30px;
+  padding: 0 var(--sp-2);
   border: 1px solid var(--ws-input-border);
-  border-radius: 4px;
+  border-radius: var(--r-sm);
   background: var(--ws-input-bg);
   color: var(--ws-label);
-  font-size: 13px;
-  font-family: 'SF Mono', 'Menlo', ui-monospace, monospace;
+  font-size: var(--fs-md);
+  font-family: var(--font-mono);
   box-sizing: border-box;
-  transition: border-color 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .input:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-/* Focused editor sections keep the existing compact, neutral controls. */
-.editorTabs { display: flex; gap: 4px; border-bottom: 1px solid var(--ws-input-border); padding-bottom: 8px; }
-.editorTabs button { flex: 1; padding: 8px 4px; border: 0; border-radius: 5px; background: transparent; color: var(--ws-label-muted); font: inherit; font-size: 12px; cursor: pointer; }
-.editorTabs button[aria-selected="true"] { background: var(--ws-input-bg); color: var(--ws-label); }
-.editorPanel { display: flex; flex-direction: column; gap: 16px; }
-.selectionSummary { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ws-label); }
-.selectionSummary button { background: none; border: 0; color: var(--ws-label-muted); padding: 0; font: inherit; cursor: pointer; }
-.selectionSummary button:hover { color: var(--ws-label); }
-.selectionActions { display: flex; gap: 12px; flex: none; }
-.help { margin: 0; color: var(--ws-label-muted); font-size: 12px; line-height: 1.5; }
-.profileSummary { cursor: pointer; color: var(--ws-label-muted); font-size: 12px; margin-bottom: 10px; }
-.profileSummary span { float: right; color: var(--ws-label); }
-.section[open] .help { margin-top: 10px; }
-.segmentBtn:disabled { opacity: .35; cursor: not-allowed; }
-.dangerSection .help { display: block; margin-top: 8px; }
-.toolbar { gap: 16px; }
-.layoutField { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--ws-label-muted); }
-.layoutField select { flex: 1; width: 0; font-family: inherit; }
-.colorInputs { display: grid; grid-template-columns: 74px minmax(0, 1fr); align-items: end; }
-.colorInputs .colorRow { min-width: 0; }
-.colorInputs select { font-family: inherit; }
-.currentSwatch { height: 18px; }
-.inlinePicker { display: flex; flex-direction: column; gap: 8px; }
+.inlinePicker { display: flex; flex-direction: column; gap: var(--sp-2); }
 .inlinePicker .colorField { max-width: 140px; }
+
+/* ── Editor tabs and panel ────────────────────────────────────────── */
+.editorTabs {
+  composes: segmented from '../../styles/controls.module.css';
+  margin-bottom: var(--sp-1);
+}
+.editorTabs button {
+  flex: 1;
+  min-height: 28px;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: calc(var(--r-sm) - 2px);
+  background: transparent;
+  color: var(--ws-label-muted);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.editorTabs button:hover { color: var(--ws-label); }
+.editorTabs button[aria-selected="true"] {
+  background: var(--ws-panel);
+  color: var(--ws-label);
+  box-shadow: var(--shadow-1), 0 0 0 1px var(--ws-input-border);
+}
+
+.editorPanel { display: flex; flex-direction: column; gap: var(--sp-5); }
+
+.selectionSummary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-md); font-weight: 500; color: var(--ws-label); }
+.selectionSummary button { background: none; border: 0; color: var(--accent); padding: 0; font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+.selectionSummary button:hover { text-decoration: underline; }
+.selectionActions { display: flex; gap: var(--sp-3); flex: none; }
+
+.help { margin: 0; color: var(--ws-label-muted); font-size: var(--fs-sm); line-height: 1.5; }
+
+.profileSummary { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--ws-label-muted); font-size: var(--fs-sm); font-weight: 500; }
+.profileSummary span { margin-left: auto; color: var(--ws-label); }
+.section[open] .profileSummary { margin-bottom: var(--sp-1); }
+.section[open] .help { margin-top: var(--sp-1); }
+
+.layoutField { display: flex; gap: var(--sp-3); align-items: center; font-size: var(--fs-sm); font-weight: 500; color: var(--ws-label-muted); }
+.layoutField select { flex: 1; width: 0; font-family: inherit; font-size: var(--fs-sm); cursor: pointer; }
+
 @media (max-width: 768px) {
   .toolbar { gap: 14px; }
   .buttonGroup { gap: 6px; }
-  .zonePill, .btn { min-height: 34px; }
+  .zonePill { min-height: 36px; }
 }

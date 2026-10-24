@@ -15,6 +15,7 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
   const legendIsAuto = state.legendColor === 'auto';
   return (
     <aside className={styles.toolbar} aria-label="Keyboard editor">
+      <div className={styles.toolbarHead}>
       <LayoutSelector current={state.layout} onSelect={actions.setLayout} />
       <div className={styles.editorTabs} role="tablist" aria-label="Edit keyboard">
         {TABS.map((label, index) => (
@@ -30,6 +31,7 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
               document.getElementById(`editor-tab-${TABS[next]}`)?.focus();
             }}>{label}</button>
         ))}
+      </div>
       </div>
       <div id="editor-panel" role="tabpanel" aria-labelledby={`editor-tab-${tab}`} className={styles.editorPanel}>
         {tab === 'Keycaps' && <>
@@ -48,9 +50,9 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
           <button type="button" className={styles.extractBtn} onClick={onExtractFromImage}>Add colors from an image</button>
           <details className={styles.section}>
             <summary className={styles.profileSummary}>Keycap profile <span>{PROFILES[state.profile]?.label ?? 'Flat'}</span></summary>
-            <div className={styles.buttonGroup} role="group" aria-label="Keycap profile">
+            <div className={styles.segmented} role="group" aria-label="Keycap profile">
               {PROFILE_ORDER.map((id) => <button key={id} type="button"
-                className={`${styles.btn} ${state.profile === id ? styles.btnActive : ''}`}
+                className={`${styles.segmentBtn} ${state.profile === id ? styles.segmentBtnActive : ''}`}
                 aria-pressed={state.profile === id} onClick={() => actions.setProfile(id)}>{PROFILES[id].label}</button>)}
             </div>
             <p className={styles.help}>Flat shows solid colors. Other profiles add simulated keycap shading.</p>

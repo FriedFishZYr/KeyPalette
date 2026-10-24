@@ -106,26 +106,5 @@
   opacity: 0.5;
 }
 
-/* ── WorkspaceToggle ──────────────────────────────────────────────── */
-.workspaceToggle {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--ws-panel-border);
-  border-radius: 50%;
-  background: var(--ws-panel);
-  color: var(--ws-label);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: background 120ms ease;
-}
-
-.workspaceToggle:hover {
-  background: var(--surface-hover);
-}
 .keycap:focus-visible { outline: none; }
 .keycap:focus-visible .keyRect { stroke: var(--ws-accent); stroke-width: 3px; }

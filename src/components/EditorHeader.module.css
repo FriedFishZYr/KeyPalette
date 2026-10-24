@@ -1,42 +1,50 @@
 .header { flex-shrink: 0; background: var(--ws-panel); border-bottom: 1px solid var(--ws-panel-border); }
-.bar { display: flex; align-items: center; gap: 18px; padding: 12px 18px; }
-.brand { font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
-.project { min-width: 130px; width: 180px; }
-.project input { display: block; width: 100%; padding: 3px 5px; background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--ws-label); font: inherit; font-size: 13px; }
-.project input:hover, .project input:focus { border-color: var(--ws-input-border); }
-.status, .error { font-size: 11px; color: var(--ws-label-muted); }
-.project .status, .project .error { padding-left: 6px; }
-.error { color: #dc7979; }
+.bar { display: flex; align-items: center; gap: var(--sp-3); padding: 10px var(--sp-4); }
+.brand { display: inline-flex; align-items: center; gap: var(--sp-2); padding-right: var(--sp-3); border-right: 1px solid var(--ws-panel-border); font-size: 15px; font-weight: 650; letter-spacing: -.3px; white-space: nowrap; }
+.brand img { border-radius: 5px; }
+.project { min-width: 130px; width: 200px; }
+.project input { display: block; width: 100%; padding: 2px 6px; background: transparent; border: 1px solid transparent; border-radius: var(--r-sm); color: var(--ws-label); font: inherit; font-size: var(--fs-md); font-weight: 600; }
+.project input:hover { border-color: var(--ws-input-border); }
+.project input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.status, .error { font-size: var(--fs-xs); color: var(--ws-label-muted); }
+.project .status, .project .error { padding-left: 7px; }
+.error { color: var(--danger); }
 .history, .nav { display: flex; align-items: center; gap: 6px; }
-.nav { margin-left: auto; flex-wrap: wrap; }
-.header button { padding: 7px 10px; border: 1px solid var(--ws-input-border); border-radius: 6px; background: transparent; color: var(--ws-label); font-family: inherit; font-size: 12px; cursor: pointer; }
-.header button:hover:not(:disabled) { background: var(--surface-hover); }
-.header button[aria-pressed="true"] { border-color: var(--ws-accent); color: var(--ws-label); }
-.header button:disabled { opacity: .35; cursor: not-allowed; }
-.header .iconBtn { width: 32px; height: 32px; padding: 0; border-radius: 50%; font-size: 14px; line-height: 1; }
-.hint { color: var(--ws-label-muted); font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+.history { gap: 2px; }
+.nav { margin-left: auto; }
+.divider { width: 1px; height: 20px; margin: 0 var(--sp-1); background: var(--ws-panel-border); }
+
+/* Default for buttons in the header and its dialogs. Zero specificity, so any
+   class below (or a composed control class) wins without !important. */
+:where(.header) :where(button) { min-height: var(--control-h); padding: 0 var(--sp-3); border: 1px solid var(--ws-input-border); border-radius: var(--r-sm); background: transparent; color: var(--ws-label); font-family: inherit; font-size: var(--fs-sm); font-weight: 500; cursor: pointer; transition: background 120ms ease, border-color 120ms ease; }
+:where(.header) :where(button):hover:not(:disabled) { background: var(--surface-hover); }
+:where(.header) :where(button):disabled { opacity: .4; cursor: not-allowed; }
+.navBtn { composes: ghost from '../styles/controls.module.css'; color: var(--ws-label); }
+.navBtn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.iconBtn { composes: icon ghost from '../styles/controls.module.css'; }
+.hint { color: var(--ws-label-muted); font-size: var(--fs-md); line-height: 1.5; margin: 0 0 var(--sp-4); }
 
 /* Notice strip under the bar: storage warnings, share confirmations. */
-.notice { display: flex; align-items: center; gap: 10px; padding: 8px 18px; border-top: 1px solid var(--ws-panel-border); background: var(--ws-input-bg); font-size: 12px; }
+.notice { display: flex; align-items: center; gap: 10px; padding: 6px var(--sp-4); border-top: 1px solid var(--ws-panel-border); background: var(--accent-soft); font-size: var(--fs-sm); }
 .noticeWarning { background: rgba(217, 160, 78, .16); }
 .noticeText { flex: 1; min-width: 0; line-height: 1.4; }
-.notice .iconBtn { width: 26px; height: 26px; }
+.notice .iconBtn { width: 26px; min-height: 26px; }
 
 .presetGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.header .preset { padding: 14px; text-align: left; display: flex; align-items: center; gap: 12px; }
+.preset { padding: 14px; text-align: left; display: flex; align-items: center; gap: 12px; }
 .swatches { display: flex; flex-shrink: 0; }
-.swatches span { width: 18px; height: 18px; border: 1px solid var(--ws-key-border); border-radius: 50%; margin-right: -3px; }
+.swatches span { width: 20px; height: 20px; border: 1px solid var(--ws-key-border); border-radius: 50%; margin-right: -3px; }
 
 /* My designs */
 .designList { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; padding: 0; }
 .designRow { display: flex; align-items: stretch; gap: 6px; }
-.header .designOpen { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 12px; text-align: left; }
+.designOpen { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 12px; text-align: left; }
+.designOpen[aria-pressed="true"] { border-color: var(--accent); }
 .designName { overflow-wrap: anywhere; }
-.header .rowAction { flex: none; color: var(--ws-label-muted); }
-.confirm { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid rgba(217, 78, 78, .45); border-radius: 6px; font-size: 12px; }
+.rowAction { flex: none; color: var(--ws-label-muted); }
+.confirm { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent); border-radius: var(--r-sm); font-size: 12px; }
 .confirm span { flex: 1; min-width: 160px; }
-.header .danger { border-color: rgba(217, 78, 78, .6); color: rgba(217, 78, 78, .95); }
-.header .danger:hover:not(:disabled) { background: rgba(217, 78, 78, .12); }
+.danger { composes: danger from '../styles/controls.module.css'; }
 .designFooter { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .designFooter .hint { margin: 0; }
 
@@ -47,9 +55,9 @@
   .nav { width: 100%; margin: 0; gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .nav::-webkit-scrollbar { display: none; }
   .nav > * { flex: none; white-space: nowrap; }
-  .header button { min-height: 36px; }
+  :where(.header) :where(button) { min-height: 36px; }
   .history { margin-left: auto; }
   .presetGrid { grid-template-columns: 1fr; }
   .designRow { flex-wrap: wrap; }
-  .header .designOpen { flex-basis: 100%; }
+  .designOpen { flex-basis: 100%; }
 }

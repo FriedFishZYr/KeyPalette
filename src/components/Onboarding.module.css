@@ -7,8 +7,9 @@
   margin: 0 16px 12px;
   padding: 12px 16px;
   border: 1px solid var(--ws-panel-border);
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: var(--ws-panel);
+  box-shadow: var(--shadow-1);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -16,15 +17,5 @@
 .text strong { display: block; margin-bottom: 4px; font-size: 13px; }
 .text ol { margin: 0; padding-left: 18px; color: var(--ws-label-muted); }
 .actions { display: flex; gap: 8px; }
-.actions button {
-  padding: 7px 12px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ws-label);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-.actions button:hover { background: var(--surface-hover); }
-.primary { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+.secondary { composes: button from '../styles/controls.module.css'; }
+.primary { composes: primary from '../styles/controls.module.css'; }

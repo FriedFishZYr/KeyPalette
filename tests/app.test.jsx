@@ -78,8 +78,8 @@ test('the board is one tab stop and arrow keys move focus between keys', () => {
   const q = document.querySelector('g[aria-label^="Q key"]');
   q.focus();
   expect(document.activeElement).toBe(q);
-  fireEvent.keyDown(document.querySelector('svg'), { key: 'ArrowRight' });
+  fireEvent.keyDown(document.querySelector('[data-board="a"] svg'), { key: 'ArrowRight' });
   expect(document.activeElement.getAttribute('aria-label')).toMatch(/^W key/);
-  fireEvent.keyDown(document.querySelector('svg'), { key: 'ArrowDown' });
+  fireEvent.keyDown(document.querySelector('[data-board="a"] svg'), { key: 'ArrowDown' });
   expect(document.activeElement.getAttribute('aria-label')).toMatch(/^S key/);
 });

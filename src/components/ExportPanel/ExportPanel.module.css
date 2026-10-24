@@ -6,11 +6,9 @@
 
 .sectionTitle {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--fs-md);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ws-label-muted);
+  color: var(--ws-label);
 }
 
 /* Collapsible header (V3.1) — mirrors the Toolbar section toggle. */
@@ -38,30 +36,8 @@
 }
 
 .exportBtn {
+  composes: button from '../../styles/controls.module.css';
   width: 100%;
-  padding: 8px;
-  border: 1px solid var(--ws-input-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ws-label-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
-}
-
-.exportBtn:hover:not(:disabled) {
-  color: var(--ws-label);
-  border-color: var(--ws-label-muted);
-  background: var(--surface-hover);
-}
-
-.exportBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .row {
@@ -76,10 +52,10 @@
 .error {
   margin: 0;
   font-size: 12px;
-  color: rgba(217, 78, 78, 0.9);
+  color: var(--danger);
 }
 
-.download { background: var(--accent); color: #fff; }
+.download { composes: primary from '../../styles/controls.module.css'; }
 .hint { margin: 0 0 8px; color: var(--ws-label-muted); font-size: 13px; line-height: 1.5; }
 .divider { width: 100%; border: 0; border-top: 1px solid var(--ws-input-border); margin: 12px 0; }
 .shareUrl {
@@ -89,7 +65,7 @@
   border-radius: 6px;
   background: var(--ws-input-bg);
   color: var(--ws-label);
-  font-family: 'SF Mono', 'Menlo', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   box-sizing: border-box;
 }

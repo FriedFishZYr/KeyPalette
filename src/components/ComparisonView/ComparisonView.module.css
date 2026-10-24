@@ -22,9 +22,8 @@
 }
 
 .label {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
-  letter-spacing: 0.04em;
   color: var(--ws-label-muted);
   max-width: 100%;
   overflow: hidden;

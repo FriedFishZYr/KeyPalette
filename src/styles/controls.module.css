@@ -1,0 +1,91 @@
+/* Shared control styles. Components pull these in with `composes:` so every
+   button in the app shares one size, case and color language. */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--ws-input-border);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ws-label);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.button:hover:not(:disabled) { background: var(--surface-hover); }
+.button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.primary {
+  composes: button;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.primary:hover:not(:disabled) { border-color: var(--accent-hover); background: var(--accent-hover); }
+
+.ghost {
+  composes: button;
+  border-color: transparent;
+  color: var(--ws-label-muted);
+}
+.ghost:hover:not(:disabled) { color: var(--ws-label); }
+
+.danger {
+  composes: button;
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  color: var(--danger);
+}
+.danger:hover:not(:disabled) { background: var(--danger-soft); }
+
+.icon {
+  composes: button;
+  width: var(--control-h);
+  padding: 0;
+}
+
+/* Segmented control: a row of mutually exclusive options. */
+.segmented {
+  display: flex;
+  padding: 2px;
+  border-radius: var(--r-sm);
+  background: var(--ws-input-bg);
+  border: 1px solid var(--ws-input-border);
+}
+.segment {
+  flex: 1;
+  min-height: 26px;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: calc(var(--r-sm) - 2px);
+  background: transparent;
+  color: var(--ws-label-muted);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+.segment:hover:not(:disabled) { color: var(--ws-label); }
+.segment:disabled { opacity: 0.4; cursor: not-allowed; }
+.segmentActive {
+  background: var(--ws-panel);
+  color: var(--ws-label);
+  box-shadow: var(--shadow-1), 0 0 0 1px var(--ws-input-border);
+}
+
+/* Small uppercase-free section label. */
+.label {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ws-label-muted);
+}

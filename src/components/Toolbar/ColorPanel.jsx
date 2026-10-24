@@ -122,7 +122,7 @@ export default function ColorPanel({
 
       <div className={styles.actionRow}>
         <button
-          className={`${styles.btn} ${styles.applyBtn}`}
+          className={styles.applyBtn}
           onClick={onApply}
           disabled={!hasSelection || isMixed || (format === 'hex' && !isValidHex(hexInput))}
         >

@@ -96,7 +96,15 @@ export function shadeTowardContrast(hex, frac) {
   return luminance(hex) > 0.5 ? darken(hex, frac) : lighten(hex, frac);
 }
 
-// Black or white, whichever reads better on the given background.
+// WCAG contrast ratio between two colors, 1–21.
+export function contrastRatio(hexA, hexB) {
+  const [hi, lo] = [luminance(hexA), luminance(hexB)].sort((a, b) => b - a);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Black or white, whichever has the higher contrast ratio on the background.
+// The crossover sits near luminance 0.18, so mid tones (tan, gold, mid grey)
+// get dark text.
 export function contrastText(hex) {
-  return luminance(hex) > 0.5 ? '#000000' : '#ffffff';
+  return contrastRatio(hex, '#000000') >= contrastRatio(hex, '#ffffff') ? '#000000' : '#ffffff';
 }
