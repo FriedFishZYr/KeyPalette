@@ -5,7 +5,7 @@
 .project { min-width: 130px; width: 200px; }
 .project input { display: block; width: 100%; padding: 2px 6px; background: transparent; border: 1px solid transparent; border-radius: var(--r-sm); color: var(--ws-label); font: inherit; font-size: var(--fs-md); font-weight: 600; }
 .project input:hover { border-color: var(--ws-input-border); }
-.project input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.project input:focus { outline: none; border-color: var(--ws-accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .status, .error { font-size: var(--fs-xs); color: var(--ws-label-muted); }
 .project .status, .project .error { padding-left: 7px; }
 .error { color: var(--danger); }
@@ -20,7 +20,7 @@
 :where(.header) :where(button):hover:not(:disabled) { background: var(--surface-hover); }
 :where(.header) :where(button):disabled { opacity: .4; cursor: not-allowed; }
 .navBtn { composes: ghost from '../styles/controls.module.css'; color: var(--ws-label); }
-.navBtn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.navBtn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); }
 .iconBtn { composes: icon ghost from '../styles/controls.module.css'; }
 .hint { color: var(--ws-label-muted); font-size: var(--fs-md); line-height: 1.5; margin: 0 0 var(--sp-4); }
 
@@ -30,16 +30,19 @@
 .noticeText { flex: 1; min-width: 0; line-height: 1.4; }
 .notice .iconBtn { width: 26px; min-height: 26px; }
 
-.presetGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.preset { padding: 14px; text-align: left; display: flex; align-items: center; gap: 12px; }
-.swatches { display: flex; flex-shrink: 0; }
-.swatches span { width: 20px; height: 20px; border: 1px solid var(--ws-key-border); border-radius: 50%; margin-right: -3px; }
+.presetGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); }
+.preset { display: flex; flex-direction: column; align-items: stretch; gap: var(--sp-2); padding: var(--sp-2) var(--sp-2) var(--sp-3); border-radius: var(--r-md); font-weight: 500; text-align: center; }
+.preset:hover:not(:disabled) { border-color: var(--ws-accent); }
+.presetThumb > * { max-width: 100%; }
+.presetThumb svg { max-width: 100%; height: auto; }
+.presetThumb { display: flex; align-items: center; justify-content: center; height: 92px; border-radius: var(--r-sm); background: var(--ws-bg); pointer-events: none; }
+@media (max-width: 760px) { .presetGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* My designs */
 .designList { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; padding: 0; }
 .designRow { display: flex; align-items: stretch; gap: 6px; }
 .designOpen { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 12px; text-align: left; }
-.designOpen[aria-pressed="true"] { border-color: var(--accent); }
+.designOpen[aria-pressed="true"] { border-color: var(--ws-accent); }
 .designName { overflow-wrap: anywhere; }
 .rowAction { flex: none; color: var(--ws-label-muted); }
 .confirm { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent); border-radius: var(--r-sm); font-size: 12px; }
@@ -48,16 +51,20 @@
 .designFooter { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .designFooter .hint { margin: 0; }
 
-@media (max-width: 1100px) { .bar { flex-wrap: wrap; gap: 10px; } .nav { margin-left: auto; } }
+/* iOS zooms into fields under 16px on focus. */
+@media (pointer: coarse) { .project input { font-size: 16px; } }
+@media (max-width: 860px) {
+  .bar { gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); }
+  .brand { padding-right: var(--sp-2); }
+  .project { flex: 1; width: auto; min-width: 0; }
+}
 @media (max-width: 600px) {
-  .bar { padding: 10px 12px; }
-  .project { flex: 1; }
-  .nav { width: 100%; margin: 0; gap: 5px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav > * { flex: none; white-space: nowrap; }
-  :where(.header) :where(button) { min-height: 36px; }
-  .history { margin-left: auto; }
-  .presetGrid { grid-template-columns: 1fr; }
+  /* Logo only; the name field gets the room. */
+  .brandName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .brand { padding-right: var(--sp-2); }
+  .project .status, .project .error { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .presetGrid { gap: var(--sp-2); }
+  .presetThumb { height: 64px; padding: 0 var(--sp-1); }
   .designRow { flex-wrap: wrap; }
   .designOpen { flex-basis: 100%; }
 }

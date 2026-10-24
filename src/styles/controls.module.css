@@ -82,6 +82,10 @@
   box-shadow: var(--shadow-1), 0 0 0 1px var(--ws-input-border);
 }
 
+@media (pointer: coarse) {
+  .segment { min-height: 38px; }
+}
+
 /* Small uppercase-free section label. */
 .label {
   margin: 0;

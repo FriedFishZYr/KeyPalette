@@ -11,7 +11,8 @@
   box-shadow: var(--shadow-2);
   font-family: inherit;
 }
-.dialog::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
+.dialog[open] { animation: global(kp-rise-in) 180ms ease-out; }
+.dialog::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); animation: global(kp-fade-in) 180ms ease-out; }
 .content { padding: 22px; }
 .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .header h2 { margin: 0; font-size: var(--fs-lg); font-weight: 600; }

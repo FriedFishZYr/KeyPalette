@@ -80,7 +80,6 @@ export default function Keyboard({
   const svgH = boardH + CASE_PADDING * 2;
   const filterId = `case-shadow-${boardId}`;
   const dishId = `key-dish-${boardId}`;
-  const liftId = `key-lift-${boardId}`;
 
   // Active keycap profile. The dish gradient is declared once below using
   // this profile's strength, then mapped to each key's top surface.
@@ -175,10 +174,6 @@ export default function Keyboard({
               <stop offset="100%" stopColor="#000000" stopOpacity={profile.dishStrength} />
             </radialGradient>
           )}
-          {/* Lifted shadow for selected keys */}
-          <filter id={liftId} x="-10%" y="-10%" width="120%" height="130%">
-            <feDropShadow dx={0} dy={3} stdDeviation={4} floodColor="#000" floodOpacity={0.3} />
-          </filter>
         </defs>
         <Case
           width={boardW}
@@ -204,7 +199,6 @@ export default function Keyboard({
             profile={profile}
             rowFromBottom={lastRow - k.y}
             dishId={dishId}
-            liftId={liftId}
             legendColor={board.legendColor}
             legendPosition={board.legendPosition}
           />

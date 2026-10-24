@@ -19,7 +19,6 @@ function KeyCap({
   profile,
   rowFromBottom = 0,
   dishId,
-  liftId,
   legendColor = 'auto',
   legendPosition = 'top',
   interactive = true,
@@ -90,12 +89,11 @@ function KeyCap({
         /* Soft contact shadow under the cap. */
         <path d={outerPath} className={styles.keyShadow} transform="translate(0 2)" />
       )}
-      {/* Sidewall (or the whole flat cap): keeps the key border and the lift
-          shadow when selected. */}
+      {/* Sidewall (or the whole flat cap), with the key border. Selection is
+          shown only by the ring below, never by a shadow or fill change. */}
       <path
         d={outerPath}
         fill={wallColor}
-        filter={selected ? `url(#${liftId})` : undefined}
         className={styles.keyRect}
       />
       {!isFlat && (
@@ -108,9 +106,10 @@ function KeyCap({
             height={frontExtra + inset - 1}
             rx={2}
             fill={frontColor}
+            className={styles.keyFace}
           />
           {/* Top surface — the key's true color, slightly lifted. */}
-          <path d={topPath} fill={topColor} />
+          <path d={topPath} fill={topColor} className={styles.keyFace} />
           {/* Dish overlay — a color-independent light→dark gradient declared
               once in Keyboard's <defs>, mapped to each top surface's bbox. */}
           <path d={topPath} fill={`url(#${dishId})`} pointerEvents="none" />

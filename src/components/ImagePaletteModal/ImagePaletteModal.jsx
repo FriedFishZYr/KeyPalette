@@ -3,7 +3,7 @@ import { extractPalette } from '../../utils/extractPalette.js';
 import styles from './ImagePaletteModal.module.css';
 import Dialog from '../Dialog.jsx';
 
-export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }) {
+export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose, selectionCount = 0 }) {
   const [thumbUrl, setThumbUrl] = useState(null);
   const [palette, setPalette] = useState([]);
   const [status, setStatus] = useState('idle'); // idle | loading | done | error
@@ -80,14 +80,20 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
           </div>
 
           <div className={styles.right}>
-            <h2 className={styles.title}>Extract palette</h2>
             {status === 'idle' && (
               <p className={styles.hint}>
-                Upload an image to pull out its dominant colors.
+                Choose a PNG, JPG, or WebP image. Its main colors appear here.
               </p>
             )}
-            {status === 'loading' && <p className={styles.hint}>Reading colors…</p>}
-            {status === 'error' && <p className={styles.errorText}>{error}</p>}
+            {status === 'loading' && <p className={styles.hint} role="status">Reading colors…</p>}
+            {status === 'error' && <p className={styles.errorText} role="alert">{error}</p>}
+            {status === 'done' && (
+              <p className={styles.hint} role="status">
+                {selectionCount
+                  ? `Click a color to paint the ${selectionCount} selected ${selectionCount === 1 ? 'key' : 'keys'}, or add them all to Recent.`
+                  : 'Add these to Recent, then select keys to use them. Clicking one adds just that color.'}
+              </p>
+            )}
             {status === 'done' && (
               <div className={styles.swatchRow}>
                 {palette.map((hex, i) => (
@@ -97,7 +103,7 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
                     className={styles.swatch}
                     style={{ background: hex }}
                     title={hex}
-                    aria-label={`Use color ${hex}`}
+                    aria-label={selectionCount ? `Paint selected keys ${hex}` : `Add ${hex} to Recent`}
                     onClick={() => onSelectColor(hex)}
                   />
                 ))}
@@ -116,7 +122,7 @@ export default function ImagePaletteModal({ onSelectColor, onApplyAll, onClose }
               className={styles.applyAllBtn}
               onClick={() => onApplyAll(palette)}
             >
-              Add colors to palette
+              Add all to Recent
             </button>
           )}
         </div>

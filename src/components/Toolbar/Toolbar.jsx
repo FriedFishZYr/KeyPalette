@@ -2,6 +2,7 @@ import { useState } from 'react';
 import LayoutSelector from './LayoutSelector.jsx';
 import ZonePanel from './ZonePanel.jsx';
 import ColorPanel from './ColorPanel.jsx';
+import DesignPalette from './DesignPalette.jsx';
 import InlineColorPicker from './InlineColorPicker.jsx';
 import presets from '../../data/presets.js';
 import { PROFILES, PROFILE_ORDER } from '../../data/profiles.js';
@@ -9,12 +10,49 @@ import styles from './Toolbar.module.css';
 
 const TABS = ['Keycaps', 'Case', 'Lettering'];
 
-export default function Toolbar({ state, actions, slots = [], onExtractFromImage }) {
+// On phones `sheet` is { expanded, onToggle } and the toolbar becomes a bottom
+// sheet: collapsed it shows only selection tools, expanded the full editor.
+export default function Toolbar({ state, actions, slots = [], onExtractFromImage, sheet = null }) {
   const [tab, setTab] = useState('Keycaps');
   const count = state.selectedKeys.length;
   const legendIsAuto = state.legendColor === 'auto';
+  const peek = sheet && !sheet.expanded;
+  const summary = (
+    <div className={styles.selectionSummary}>
+      <span role="status">{count ? `Editing ${count} ${count === 1 ? 'key' : 'keys'}` : 'Select keys to start'}</span>
+      <span className={styles.selectionActions}>
+        {count === 1 && <button type="button" onClick={() => actions.selectSameColor(state.selectedKeys[0])}
+          title="Select every key with this color">Same color</button>}
+        {count > 0 && <button type="button" onClick={actions.clearSelection}>Clear</button>}
+      </span>
+    </div>
+  );
+  const selectionTools = <>
+    <ZonePanel state={state} onSelectZone={actions.selectZone} />
+    <DesignPalette state={state} onSelectColor={actions.selectByColor} />
+  </>;
+  const colorPanel = (
+    <ColorPanel activeColor={state.activeColor} onPaint={actions.paintSelected}
+      onBeginEdit={actions.beginEdit}
+      onEndEdit={(hex) => { actions.endEdit(); actions.commitColor(hex); }}
+      onResetSelected={actions.resetSelectedKeys}
+      selectionCount={count} colorHistory={state.colorHistory} onClearHistory={actions.clearColorHistory} />
+  );
+  const sheetClass = sheet ? `${styles.sheet} ${peek ? styles.sheetPeek : ''}` : '';
   return (
-    <aside className={styles.toolbar} aria-label="Keyboard editor">
+    <aside className={`${styles.toolbar} ${sheetClass}`} aria-label="Keyboard editor">
+      {sheet && (
+        <button type="button" className={styles.sheetHandle} aria-expanded={sheet.expanded} onClick={sheet.onToggle}>
+          <span className={styles.grabber} aria-hidden="true" />
+          {sheet.expanded ? 'Done' : count ? `Choose a color for ${count} ${count === 1 ? 'key' : 'keys'}` : 'Colors, case and lettering'}
+        </button>
+      )}
+      {peek ? (
+        <div className={styles.peekBody}>
+          {summary}
+          {selectionTools}
+        </div>
+      ) : <>
       <div className={styles.toolbarHead}>
       <LayoutSelector current={state.layout} onSelect={actions.setLayout} />
       <div className={styles.editorTabs} role="tablist" aria-label="Edit keyboard">
@@ -33,20 +71,14 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
         ))}
       </div>
       </div>
-      <div id="editor-panel" role="tabpanel" aria-labelledby={`editor-tab-${tab}`} className={styles.editorPanel}>
+      <div key={tab} id="editor-panel" role="tabpanel" aria-labelledby={`editor-tab-${tab}`} className={styles.editorPanel}>
         {tab === 'Keycaps' && <>
-          <div className={styles.selectionSummary}>
-            <span role="status">{count ? `Editing ${count} ${count === 1 ? 'key' : 'keys'}` : 'Select keys to start'}</span>
-            <span className={styles.selectionActions}>
-              {count === 1 && <button type="button" onClick={() => actions.selectSameColor(state.selectedKeys[0])}
-                title="Select every key with this color">Same color</button>}
-              {count > 0 && <button type="button" onClick={actions.clearSelection}>Clear</button>}
-            </span>
-          </div>
-          <ZonePanel state={state} onSelectZone={actions.selectZone} />
-          <ColorPanel activeColor={state.activeColor} onColorChange={actions.setActiveColor}
-            onApply={actions.applyColorToSelected} onResetSelected={actions.resetSelectedKeys}
-            selectionCount={count} colorHistory={state.colorHistory} onClearHistory={actions.clearColorHistory} />
+          {summary}
+          {/* In the phone sheet the groups were just visible in the collapsed
+              state, so the picker comes first once it is expanded. */}
+          {!sheet && selectionTools}
+          {colorPanel}
+          {sheet && selectionTools}
           <button type="button" className={styles.extractBtn} onClick={onExtractFromImage}>Add colors from an image</button>
           <details className={styles.section}>
             <summary className={styles.profileSummary}>Keycap profile <span>{PROFILES[state.profile]?.label ?? 'Flat'}</span></summary>
@@ -112,10 +144,7 @@ export default function Toolbar({ state, actions, slots = [], onExtractFromImage
         </select>
         {state.comparison.board && <button type="button" className={styles.resetSelectedBtn} onClick={actions.clearComparisonBoard}>Clear reference</button>}
       </section>}
-      <div className={styles.dangerSection}>
-        <button type="button" className={styles.resetAllBtn} onClick={actions.resetAll}>Reset all colors</button>
-        <span className={styles.help}>You can undo this.</span>
-      </div>
+      </>}
     </aside>
   );
 }

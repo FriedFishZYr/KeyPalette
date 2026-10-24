@@ -4,9 +4,12 @@ import AboutDialog from './AboutDialog.jsx';
 import ExportPanel from './ExportPanel/ExportPanel.jsx';
 import WorkspaceToggle from './WorkspaceToggle.jsx';
 import Icon from './Icon.jsx';
+import Keyboard from './Keyboard/Keyboard.jsx';
+import Menu from './Menu.jsx';
+import useMediaQuery from '../hooks/useMediaQuery.js';
 import presets from '../data/presets.js';
 import { layoutLabel } from '../data/layouts/index.js';
-import { MAX_SLOTS, MAX_NAME_LENGTH } from '../utils/designStore.js';
+import { MAX_SLOTS, MAX_NAME_LENGTH, DEFAULT_CASE_COLOR } from '../utils/designStore.js';
 import styles from './EditorHeader.module.css';
 
 // "Saving…" only shows once a write has been pending for a moment, so quick
@@ -20,11 +23,29 @@ function useSettledStatus(status, delay = 600) {
   return shown;
 }
 
+// Below this width the secondary actions fold into a "More" menu so the
+// header stays on one row.
+const COMPACT_QUERY = '(max-width: 860px)';
+
 const STATUS_TEXT = {
   saved: 'Saved in this browser',
   saving: 'Saving…',
   error: 'Couldn’t save · download a backup',
 };
+
+// A preset rendered on the current layout and profile, so the thumbnail shows
+// what applying it will look like.
+function PresetCard({ state, actions, boardId, name, snapshot, onPick }) {
+  return (
+    <button type="button" className={styles.preset} onClick={onPick}>
+      <span className={styles.presetThumb} aria-hidden="true">
+        <Keyboard state={state} actions={actions} data={snapshot} readOnly boardId={boardId}
+          availableWidth={196} availableHeight={76} />
+      </span>
+      {name}
+    </button>
+  );
+}
 
 export default function EditorHeader({
   state, slots, activeSlot, actions, saveStatus, canUndo, canRedo,
@@ -34,13 +55,15 @@ export default function EditorHeader({
   const [confirmDelete, setConfirmDelete] = useState(null);
   const status = useSettledStatus(saveStatus);
   const closePanel = () => { setPanel(null); setConfirmDelete(null); };
+  const compact = useMediaQuery(COMPACT_QUERY);
+  const nextWorkspace = state.workspace === 'dark' ? 'light' : 'dark';
 
   return (
     <header className={styles.header}>
       <div className={styles.bar}>
         <span className={styles.brand}>
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="22" height="22" />
-          KeyPalette
+          <span className={styles.brandName}>KeyPalette</span>
         </span>
         <div className={styles.project}>
           <input aria-label="Design name" value={state.colorwayName} placeholder="Untitled" maxLength={MAX_NAME_LENGTH}
@@ -55,6 +78,18 @@ export default function EditorHeader({
           <button type="button" className={styles.iconBtn} disabled={!canRedo} onClick={actions.redo}
             aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)"><Icon name="redo" /></button>
         </div>
+        {compact ? (
+          <nav className={styles.nav} aria-label="Design actions">
+            <ExportPanel state={state} actions={actions} keyboardRef={keyboardRef} comparisonRefB={comparisonRefB} />
+            <Menu label="More actions" trigger={<Icon name="more" />} triggerClassName={styles.iconBtn} items={[
+              { label: 'My designs', onSelect: () => setPanel('designs') },
+              { label: 'Presets', onSelect: () => setPanel('presets') },
+              { label: state.comparison.active ? 'Exit comparison' : 'Compare', onSelect: actions.toggleComparison },
+              { label: `Switch to ${nextWorkspace} mode`, onSelect: () => actions.setWorkspace(nextWorkspace) },
+              { label: 'About and shortcuts', onSelect: () => setPanel('about') },
+            ]} />
+          </nav>
+        ) : (
         <nav className={styles.nav} aria-label="Design actions">
           <button type="button" className={styles.navBtn} onClick={() => setPanel('designs')}>My designs</button>
           <button type="button" className={styles.navBtn} onClick={() => setPanel('presets')}>Presets</button>
@@ -67,6 +102,7 @@ export default function EditorHeader({
             onClick={() => setPanel('about')}><Icon name="help" /></button>
           <WorkspaceToggle className={styles.iconBtn} workspace={state.workspace} onToggle={actions.setWorkspace} />
         </nav>
+        )}
       </div>
       {notice && (
         <div className={`${styles.notice} ${notice.tone === 'warning' ? styles.noticeWarning : ''}`} role="status">
@@ -76,17 +112,16 @@ export default function EditorHeader({
         </div>
       )}
       {panel === 'presets' && (
-        <Dialog title="Start with a preset" onClose={closePanel}>
+        <Dialog title="Start with a preset" onClose={closePanel} wide>
           <p className={styles.hint}>Replaces the current key and case colors. You can undo this.</p>
           <div className={styles.presetGrid}>
-            {presets.map((preset) => (
-              <button type="button" key={preset.name} className={styles.preset}
-                onClick={() => { actions.applyPreset(preset); closePanel(); }}>
-                <span className={styles.swatches} aria-hidden="true">
-                  {[preset.zones.alpha, preset.zones.modifier, preset.caseColor].map((color, index) => <span key={index} style={{ background: color }} />)}
-                </span>
-                {preset.name}
-              </button>
+            <PresetCard state={state} actions={actions} boardId="preset-blank" name="Blank"
+              snapshot={actions.snapshotFromPreset({ name: 'Blank', caseColor: DEFAULT_CASE_COLOR, caseFinish: state.caseFinish, zones: {} })}
+              onPick={() => { actions.resetAll(); closePanel(); }} />
+            {presets.map((preset, index) => (
+              <PresetCard key={preset.name} state={state} actions={actions} boardId={`preset-${index}`} name={preset.name}
+                snapshot={actions.snapshotFromPreset(preset)}
+                onPick={() => { actions.applyPreset(preset); closePanel(); }} />
             ))}
           </div>
         </Dialog>

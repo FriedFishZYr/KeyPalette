@@ -10,6 +10,7 @@
   border-radius: var(--r-lg);
   background: var(--ws-panel);
   box-shadow: var(--shadow-1);
+  animation: global(kp-rise-in) 200ms ease-out;
   font-size: 12px;
   line-height: 1.5;
 }

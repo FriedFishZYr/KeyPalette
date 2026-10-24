@@ -84,18 +84,23 @@ export default function ExportPanel({ state, actions, keyboardRef, comparisonRef
             <button type="button" className={styles.exportBtn} onClick={handlePng} disabled={busy !== ''}>
               {busy === 'Image export' ? 'Preparing…' : comparing ? 'Comparison · PNG' : 'Image · PNG'}
             </button>
-            <button type="button" className={styles.exportBtn} onClick={handleSvg} disabled={busy !== ''}>Image · SVG</button>
+            <button type="button" className={styles.exportBtn} onClick={handleSvg} disabled={busy !== ''}>
+              {busy === 'SVG export' ? 'Preparing…' : 'Image · SVG'}
+            </button>
           </div>
           <label className={styles.option}>
             <input type="checkbox" checked={transparent} onChange={(event) => setTransparent(event.target.checked)} />
             Transparent background
           </label>
-          <button type="button" className={styles.exportBtn} onClick={handleJson} disabled={busy !== ''}>Editable design · JSON</button>
+          <button type="button" className={styles.exportBtn} onClick={handleJson} disabled={busy !== ''}>
+            {busy === 'Design export' ? 'Preparing…' : 'Editable design · JSON'}
+          </button>
           <hr className={styles.divider} />
           <button type="button" className={styles.exportBtn} onClick={() => { setError(''); fileInputRef.current?.click(); }}>Open a design file…</button>
           <p className={styles.hint}>Opening a file replaces this design. Undo restores the previous version.</p>
           <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleFileChange} style={{ display: 'none' }} />
           {error && <p className={styles.error} role="alert">{error}</p>}
+          <p className={styles.srOnly} role="status">{busy ? `${busy} in progress` : ''}</p>
         </div>
       </Dialog>}
     </>

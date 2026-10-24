@@ -49,7 +49,12 @@
 .keyRect {
   stroke: var(--ws-key-border);
   stroke-width: 1;
-  transition: fill 150ms ease;
+  transition: fill 160ms ease;
+}
+
+/* Front face and top surface fade with the wall when a key is recolored. */
+.keyFace {
+  transition: fill 160ms ease;
 }
 
 /* Contact shadow under shaded keycaps. */
@@ -72,6 +77,7 @@
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 11px;
   letter-spacing: 0.02em;
+  transition: fill 160ms ease;
   pointer-events: none;
   user-select: none;
 }
@@ -106,5 +112,7 @@
   opacity: 0.5;
 }
 
-.keycap:focus-visible { outline: none; }
+/* Chrome draws its own focus ring on focused SVG keys even after a mouse
+   click. Keyboard focus is shown by the key outline below instead. */
+.keycap:focus { outline: none; }
 .keycap:focus-visible .keyRect { stroke: var(--ws-accent); stroke-width: 3px; }

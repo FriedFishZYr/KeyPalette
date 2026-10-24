@@ -51,8 +51,11 @@ export default function ComparisonView({
             availableHeight={perH}
           />
         ) : (
-          <div className={styles.empty}>
-            Choose a reference under “Compare with” in the editor.
+          <div className={styles.empty} onClick={(event) => event.stopPropagation()}>
+            <strong>No reference yet</strong>
+            <span>Compare against a snapshot of this design, or pick a preset or saved design under “Compare with”.</span>
+            <button type="button" className={styles.emptyAction}
+              onClick={() => actions.setComparisonBoard(actions.snapshotCurrent())}>Snapshot this design</button>
           </div>
         )}
       </div>

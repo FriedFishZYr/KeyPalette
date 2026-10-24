@@ -71,3 +71,6 @@
 }
 .option { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ws-label-muted); cursor: pointer; }
 .option input { accent-color: var(--accent); margin: 0; }
+
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (pointer: coarse) { .shareUrl { font-size: 16px; } }

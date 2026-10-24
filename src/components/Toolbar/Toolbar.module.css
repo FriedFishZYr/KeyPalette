@@ -26,17 +26,54 @@
   background: var(--ws-panel);
 }
 
-/* Stacked layout on narrow viewports: full-width, no independent scroll. */
-@media (max-width: 768px) {
-  .toolbar {
-    width: 100%;
-    height: auto;
-    overflow-y: visible;
-    border-right: none;
-    border-bottom: 1px solid var(--ws-panel-border);
-  }
-  .toolbarHead { position: static; }
+/* ── Phone bottom sheet ───────────────────────────────────────────── */
+.sheet {
+  width: 100%;
+  height: auto;
+  max-height: 62dvh;
+  gap: var(--sp-3);
+  padding-bottom: calc(var(--sp-4) + env(safe-area-inset-bottom));
+  border-right: none;
+  border-top: 1px solid var(--ws-panel-border);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
 }
+.sheet .toolbarHead { position: static; margin: 0; padding: 0; }
+
+.sheetPeek { gap: 0; }
+
+/* Collapsed: one scrollable row of groups keeps the sheet short. */
+.peekBody { display: flex; flex-direction: column; gap: var(--sp-3); animation: global(kp-fade-in) 160ms ease-out; }
+.sheetPeek .buttonGroup {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--sp-4));
+  padding: 0 var(--sp-4) 2px;
+  scrollbar-width: none;
+}
+.sheetPeek .buttonGroup::-webkit-scrollbar { display: none; }
+.sheetPeek .zonePill { flex: none; white-space: nowrap; }
+
+.sheetHandle {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  margin: 0 calc(-1 * var(--sp-4));
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  border: 0;
+  background: var(--ws-panel);
+  color: var(--accent-text);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+.grabber { width: 36px; height: 4px; border-radius: var(--r-pill); background: var(--ws-input-border); }
 
 .section {
   display: flex;
@@ -82,11 +119,11 @@
   cursor: not-allowed;
 }
 
-/* Matches the canvas selection frame (--accent) so selection reads the same
-   in the panel and on the board. */
+/* Matches the canvas selection frame (--ws-accent) so selection reads the
+   same in the panel and on the board. */
 .zonePillActive {
   color: var(--ws-label);
-  border-color: var(--accent);
+  border-color: var(--ws-accent);
   background: var(--accent-soft);
 }
 
@@ -111,11 +148,6 @@
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────── */
-.applyBtn {
-  composes: primary from '../../styles/controls.module.css';
-  flex: 1;
-}
-
 .resetSelectedBtn {
   composes: button from '../../styles/controls.module.css';
 }
@@ -123,27 +155,6 @@
 .extractBtn {
   composes: button from '../../styles/controls.module.css';
   width: 100%;
-}
-
-.actionRow {
-  display: flex;
-  gap: 6px;
-  margin-top: var(--sp-1);
-}
-
-/* ── Reset All (danger) ───────────────────────────────────────────── */
-.dangerSection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin-top: auto;
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--ws-panel-border);
-}
-
-.resetAllBtn {
-  composes: danger from '../../styles/controls.module.css';
 }
 
 .segmented {
@@ -169,6 +180,73 @@
   font-family: inherit;
   font-size: var(--fs-sm);
   cursor: pointer;
+}
+
+/* ── Keycap color panel ───────────────────────────────────────────── */
+.colorHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+
+.linkBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  cursor: pointer;
+}
+.linkBtn:hover { text-decoration: underline; }
+
+.emptyNote {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px dashed var(--ws-input-border);
+  border-radius: var(--r-sm);
+  color: var(--ws-label-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.liveNote {
+  composes: emptyNote;
+  border-style: solid;
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--ws-label);
+}
+
+.pickerArea { display: flex; flex-direction: column; gap: var(--sp-2); transition: opacity 150ms ease; }
+.pickerIdle { opacity: 0.4; }
+
+/* ── In this design (palette strip) ───────────────────────────────── */
+.paletteStrip {
+  display: flex;
+  height: 30px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--ws-key-border);
+}
+
+/* Full-bleed segments (Coolors-style); each grows a little on hover. */
+.paletteSwatch {
+  position: relative;
+  flex: 1;
+  min-width: 14px;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: flex-grow 150ms ease;
+}
+.paletteSwatch:hover { flex-grow: 1.6; }
+.paletteSwatch:focus-visible { z-index: 1; outline-offset: -3px; }
+
+.paletteSwatchActive::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 2px solid var(--ws-accent);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--ws-panel);
 }
 
 /* ── Color preview / mixed-color indicator (V2 §10) ───────────────── */
@@ -236,8 +314,13 @@
   transition: transform 100ms ease;
 }
 
-.historySwatch:hover {
+.historySwatch:hover:not(:disabled) {
   transform: scale(1.12);
+}
+
+.historySwatch:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ── Color inputs ─────────────────────────────────────────────────── */
@@ -283,7 +366,7 @@
 
 .input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--ws-accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
@@ -316,10 +399,10 @@
   box-shadow: var(--shadow-1), 0 0 0 1px var(--ws-input-border);
 }
 
-.editorPanel { display: flex; flex-direction: column; gap: var(--sp-5); }
+.editorPanel { display: flex; flex-direction: column; gap: var(--sp-5); animation: global(kp-fade-in) 160ms ease-out; }
 
 .selectionSummary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-md); font-weight: 500; color: var(--ws-label); }
-.selectionSummary button { background: none; border: 0; color: var(--accent); padding: 0; font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+.selectionSummary button { background: none; border: 0; color: var(--accent-text); padding: 0; font: inherit; font-size: var(--fs-sm); cursor: pointer; }
 .selectionSummary button:hover { text-decoration: underline; }
 .selectionActions { display: flex; gap: var(--sp-3); flex: none; }
 
@@ -334,7 +417,20 @@
 .layoutField select { flex: 1; width: 0; font-family: inherit; font-size: var(--fs-sm); cursor: pointer; }
 
 @media (max-width: 768px) {
-  .toolbar { gap: 14px; }
   .buttonGroup { gap: 6px; }
   .zonePill { min-height: 36px; }
+}
+
+/* Touch screens: 44px targets. Text links keep their look but get a larger
+   hit area through padding offset by negative margin. */
+@media (pointer: coarse) {
+  .zonePill { min-height: 44px; padding-right: 14px; }
+  .paletteStrip { height: 44px; }
+  .historySwatch { width: 36px; height: 36px; }
+  .historyStrip { gap: var(--sp-2); }
+  .historyClear { min-height: 36px; padding: 0 var(--sp-2); }
+  .linkBtn, .selectionSummary button { padding: 12px 6px; margin: -12px -6px; }
+  .editorTabs button { min-height: 40px; }
+  .input { min-height: 44px; font-size: 16px; }
+  .compareSelect, .layoutField select { min-height: 44px; font-size: 16px; }
 }

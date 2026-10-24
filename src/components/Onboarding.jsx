@@ -8,8 +8,8 @@ export default function Onboarding({ onTryPreset, onDismiss }) {
         <strong>Three steps to a colorway</strong>
         <ol>
           <li>Pick keys: click one, shift-click more, or choose a group such as Typing keys.</li>
-          <li>Choose a color, or pull a palette from a photo.</li>
-          <li>Apply it, then share a link or download the image.</li>
+          <li>Choose a color. The keys change as you pick, or pull a palette from a photo.</li>
+          <li>Share a link or download the image.</li>
         </ol>
       </div>
       <div className={styles.actions}>

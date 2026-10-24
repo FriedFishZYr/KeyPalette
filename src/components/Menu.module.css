@@ -1,0 +1,39 @@
+.root { position: relative; }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: var(--sp-1);
+  border: 1px solid var(--ws-panel-border);
+  border-radius: var(--r-md);
+  background: var(--ws-panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), var(--shadow-1);
+  transform-origin: top right;
+  animation: global(kp-pop-in) 140ms ease-out;
+}
+
+/* The header's zero-specificity button default is overridden by this class. */
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 40px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ws-label);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  text-align: left;
+  cursor: pointer;
+}
+.item:hover, .item:focus-visible { background: var(--surface-hover); }
+.item:focus-visible { outline-offset: -2px; }
+@media (pointer: coarse) { .item { min-height: 44px; } }
+.item svg { flex: none; color: var(--ws-label-muted); }

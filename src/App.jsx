@@ -6,6 +6,7 @@ import Toolbar from './components/Toolbar/Toolbar.jsx';
 import EditorHeader from './components/EditorHeader.jsx';
 import ImagePaletteModal from './components/ImagePaletteModal/ImagePaletteModal.jsx';
 import Onboarding from './components/Onboarding.jsx';
+import Icon from './components/Icon.jsx';
 import useMediaQuery from './hooks/useMediaQuery.js';
 import presets from './data/presets.js';
 import { downloadStorageBackup } from './utils/designStore.js';
@@ -13,8 +14,9 @@ import { decodeShare, readShareToken } from './utils/share.js';
 
 const ONBOARDED_KEY = 'keypalette-onboarded';
 const NARROW_QUERY = '(max-width: 768px)';
-// Below this scale keys stop being tappable, so narrow screens scroll instead.
-const NARROW_MIN_SCALE = 0.72;
+// Zoomed in on narrow screens, the board keeps this scale so keys are easy to
+// tap and the canvas scrolls. Otherwise the whole board fits the width.
+const NARROW_ZOOM_SCALE = 0.72;
 
 const readFlag = (key) => { try { return localStorage.getItem(key) === '1'; } catch { return false; } };
 const writeFlag = (key) => { try { localStorage.setItem(key, '1'); } catch { /* storage unavailable */ } };
@@ -47,6 +49,9 @@ export default function App() {
   const keyboardRef = useRef(null);
   const boardRefB = useRef(null);
   const narrow = useMediaQuery(NARROW_QUERY);
+  const [zoomed, setZoomed] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const zoomActive = narrow && zoomed;
 
   // First-run guidance: shown on a blank board until dismissed or used.
   const [onboarded, setOnboarded] = useState(() => readFlag(ONBOARDED_KEY));
@@ -138,9 +143,11 @@ export default function App() {
         actions={actions}
         slots={slots}
         onExtractFromImage={() => setImageModalOpen(true)}
+        sheet={narrow ? { expanded: sheetOpen, onToggle: () => setSheetOpen((open) => !open) } : null}
       />
       <main className={styles.main}>
-        <div className={styles.canvas} ref={mainRef} onClick={actions.clearSelection}>
+        <div className={zoomActive ? `${styles.canvas} ${styles.canvasZoomed}` : styles.canvas}
+          ref={mainRef} onClick={actions.clearSelection}>
         {state.comparison.active ? (
           <ComparisonView
             state={state}
@@ -158,10 +165,17 @@ export default function App() {
             boardId="a"
             availableWidth={canvasSize.width}
             availableHeight={canvasSize.height}
-            minScale={narrow ? NARROW_MIN_SCALE : 0}
+            minScale={zoomActive ? NARROW_ZOOM_SCALE : 0}
           />
         )}
         </div>
+        {narrow && !state.comparison.active && (
+          <button type="button" className={styles.zoomBtn} onClick={() => setZoomed((value) => !value)}
+            aria-pressed={zoomed} aria-label={zoomed ? 'Fit board to screen' : 'Zoom in on board'}>
+            <Icon name={zoomed ? 'zoomOut' : 'zoomIn'} />
+            {zoomed ? 'Fit' : 'Zoom'}
+          </button>
+        )}
         {showOnboarding && (
           <Onboarding
             onTryPreset={() => { actions.applyPreset(presets[Math.floor(Math.random() * presets.length)]); finishOnboarding(); }}
@@ -172,15 +186,16 @@ export default function App() {
           {state.comparison.active
             ? 'Current design is editable · Reference is a snapshot'
             : narrow
-              ? 'Tap a key or choose a group · Scroll sideways to see the whole board'
+              ? zoomActive ? 'Tap a key or choose a group · Scroll sideways to see the whole board' : 'Tap a key or choose a group'
               : 'Click a key or choose a group · Shift-click to select more · Esc to clear'}
         </div>
       </main>
       </div>
       {imageModalOpen && (
         <ImagePaletteModal
+          selectionCount={state.selectedKeys.length}
           onSelectColor={(hex) => {
-            actions.setActiveColor(hex);
+            actions.paintSelected(hex);
             actions.addColorsToHistory([hex]);
             setImageModalOpen(false);
           }}

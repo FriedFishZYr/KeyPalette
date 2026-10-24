@@ -108,21 +108,23 @@ export default function useColorway() {
 
   const setLayout = useCallback((layout) => update({ layout, selectedKeys: [] }), [update]);
   const renameDesign = useCallback((colorwayName) => update({ colorwayName }), [update]);
-  const setActiveColor = useCallback((activeColor) => update({ activeColor }), [update]);
 
-  const applyColorToSelected = useCallback(() => {
+  // Direct apply: the picker color lands on the selected keys as it changes.
+  // Callers wrap a drag or typing session in beginEdit/endEdit so it is one
+  // undo step, then pass the final color to commitColor to record it in Recent.
+  const paintSelected = useCallback((hex) => {
     setStore((p) => {
       const cur = p.slots[p.active];
-      if (cur.activeColor == null || cur.selectedKeys.length === 0) return p;
+      if (cur.selectedKeys.length === 0) return replaceActive(p, { ...cur, activeColor: hex });
       const keyColors = { ...cur.keyColors };
-      for (const id of cur.selectedKeys) keyColors[id] = cur.activeColor;
-      return replaceActive(p, { ...cur, keyColors });
+      for (const id of cur.selectedKeys) keyColors[id] = hex;
+      return replaceActive(p, { ...cur, keyColors, activeColor: hex });
     });
-    // Record the applied color once, reading the value synchronously from the
-    // ref so it doesn't depend on the (async) setStore updater running first.
-    const { activeColor, selectedKeys } = stateRef.current;
-    if (activeColor != null && selectedKeys.length > 0) pushToHistory(activeColor);
-  }, [setStore, pushToHistory]);
+  }, [setStore]);
+
+  const commitColor = useCallback((hex) => {
+    if (hex && stateRef.current.selectedKeys.length > 0) pushToHistory(hex);
+  }, [pushToHistory]);
 
   const toggleKeySelected = useCallback(
     (keyId, additive) => {
@@ -153,6 +155,22 @@ export default function useColorway() {
         const layoutKeys = layouts[cur.layout] ?? [];
         const matching = layoutKeys
           .filter((k) => (cur.keyColors[k.id] ?? DEFAULT_KEY_COLOR) === target)
+          .map((k) => k.id);
+        const selectedKeys = additive ? [...new Set([...cur.selectedKeys, ...matching])] : matching;
+        const activeColor = computeActiveColor(selectedKeys, cur.keyColors, cur.activeColor);
+        return replaceActive(p, { ...cur, selectedKeys, activeColor });
+      });
+    },
+    [setStore],
+  );
+
+  // Selects every key painted a given color (the design palette strip).
+  const selectByColor = useCallback(
+    (hex, additive = false) => {
+      setStore((p) => {
+        const cur = p.slots[p.active];
+        const matching = (layouts[cur.layout] ?? [])
+          .filter((k) => (cur.keyColors[k.id] ?? DEFAULT_KEY_COLOR) === hex)
           .map((k) => k.id);
         const selectedKeys = additive ? [...new Set([...cur.selectedKeys, ...matching])] : matching;
         const activeColor = computeActiveColor(selectedKeys, cur.keyColors, cur.activeColor);
@@ -377,7 +395,7 @@ export default function useColorway() {
   const actions = useMemo(
     () => ({
       undo, redo, beginEdit, endEdit, renameDesign,
-      setLayout, setActiveColor, applyColorToSelected, toggleKeySelected, selectSameColor,
+      setLayout, paintSelected, commitColor, toggleKeySelected, selectSameColor, selectByColor,
       clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
       setProfile, setLegendColor, setLegendPosition,
       resetSelectedKeys, resetAll, applyPreset, importColorway,
@@ -388,7 +406,7 @@ export default function useColorway() {
     }),
     [
       undo, redo, beginEdit, endEdit, renameDesign,
-      setLayout, setActiveColor, applyColorToSelected, toggleKeySelected, selectSameColor,
+      setLayout, paintSelected, commitColor, toggleKeySelected, selectSameColor, selectByColor,
       clearSelection, selectZone, setCaseColor, setCaseFinish, setWorkspace,
       setProfile, setLegendColor, setLegendPosition,
       resetSelectedKeys, resetAll, applyPreset, importColorway,
