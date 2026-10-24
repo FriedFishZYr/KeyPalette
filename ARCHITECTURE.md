@@ -129,4 +129,4 @@ Versions 1–3 import; missing fields take defaults; every value is validated be
 
 ## Deployment
 
-Static: `vite build` → `dist/`. Set absolute `og:image`/`twitter:image` URLs and Vite `base` (if served from a sub-path) before publishing.
+Static: `vite build` → `dist/`, published to GitHub Pages at `https://friedfishzyr.github.io/KeyPalette/` by `.github/workflows/deploy.yml` on every push to `main`. Vite `base` is `/KeyPalette/`; Vite rewrites the asset links in `index.html` to match, but files in `public/` are copied verbatim, so `manifest.webmanifest` uses relative paths. The `og:url`/`og:image`/`twitter:image` tags are absolute and must change with the domain.

@@ -4,6 +4,8 @@ A lightweight, browser-based tool for designing and visualizing custom keycap co
 
 No accounts. No installs. No uploads. Open it, pick a layout, and start painting your board.
 
+**Try it:** [friedfishzyr.github.io/KeyPalette](https://friedfishzyr.github.io/KeyPalette/)
+
 ![A TKL board in the Nord preset with its color legend, as exported by KeyPalette](docs/export-example.png)
 
 ---
@@ -49,7 +51,7 @@ npm install
 npm run dev
 ```
 
-Then open `http://localhost:5173`.
+Then open `http://localhost:5173/KeyPalette/`.
 
 Other scripts:
 
@@ -116,7 +118,9 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the state shape and data formats.
 
 ## Deploying
 
-KeyPalette is a static site: `npm run build` and serve `dist/`. Before going live, set the `og:image` and `twitter:image` tags in `index.html` to absolute URLs, and set Vite's `base` option if the app will live under a sub-path.
+KeyPalette is a static site hosted on GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`, which runs `npm run check` and publishes `dist/` (the repo's Settings → Pages → Source must be set to "GitHub Actions").
+
+The app is served from the `/KeyPalette/` sub-path, set by `base` in `vite.config.js`. To host it elsewhere, change `base` (use `'/'` for a domain root) and the absolute `og:url`, `og:image`, and `twitter:image` URLs in `index.html`. Designs live in the browser's local storage for the site's origin, so moving to a new domain leaves existing users' saved designs behind on the old one.
 
 ## Contributing
 
