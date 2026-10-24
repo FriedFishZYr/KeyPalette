@@ -11,28 +11,9 @@
 }
 
 /* ── Workspace tokens ─────────────────────────────────────────────── */
-/* Dark is the default; :root carries dark values so they apply even before
-   the data-workspace attribute is read. [data-workspace="light"] overrides. */
+/* Light is the default; :root carries light values so they apply even before
+   the data-workspace attribute is read. [data-workspace="dark"] overrides. */
 :global(:root) {
-  --ws-bg: #111111;
-  --ws-panel: #1e1e1e;
-  --ws-panel-border: rgba(255, 255, 255, 0.06);
-  --ws-label: #e8e8e8;
-  --ws-label-muted: #999999;
-  --ws-key-border: rgba(255, 255, 255, 0.12);
-  --ws-input-bg: #2a2a2a;
-  --ws-input-border: rgba(255, 255, 255, 0.1);
-
-  /* Non-contrast interaction tokens (accent, hover, selection ring) */
-  --surface-hover: rgba(255, 255, 255, 0.1);
-  --accent: #4a90d9;
-  --ring: #fff;
-  /* Selection frame accent (V3 §3): one hue that reads on both #111 and #f0f0f0
-     backgrounds and over any keycap color. */
-  --ws-accent: #4f8cff;
-}
-
-:global([data-workspace="light"]) {
   --ws-bg: #f0f0f0;
   --ws-panel: #ffffff;
   --ws-panel-border: rgba(0, 0, 0, 0.08);
@@ -42,9 +23,28 @@
   --ws-input-bg: #f7f7f7;
   --ws-input-border: rgba(0, 0, 0, 0.1);
 
+  /* Non-contrast interaction tokens (accent, hover, selection ring) */
   --surface-hover: rgba(0, 0, 0, 0.08);
   --accent: #2b6cb0;
   --ring: #333;
+  /* Selection frame accent (V3 §3): one hue that reads on both #111 and #f0f0f0
+     backgrounds and over any keycap color. */
+  --ws-accent: #4f8cff;
+}
+
+:global([data-workspace="dark"]) {
+  --ws-bg: #111111;
+  --ws-panel: #1e1e1e;
+  --ws-panel-border: rgba(255, 255, 255, 0.06);
+  --ws-label: #e8e8e8;
+  --ws-label-muted: #999999;
+  --ws-key-border: rgba(255, 255, 255, 0.12);
+  --ws-input-bg: #2a2a2a;
+  --ws-input-border: rgba(255, 255, 255, 0.1);
+
+  --surface-hover: rgba(255, 255, 255, 0.1);
+  --accent: #4a90d9;
+  --ring: #fff;
   --ws-accent: #4f8cff;
 }
 

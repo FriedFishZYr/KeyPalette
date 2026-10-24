@@ -25,7 +25,7 @@ export const DEFAULT_STATE = Object.freeze({
   selectedKeys: [],
   activeColor: '#cccccc',
   colorwayName: 'Untitled',
-  workspace: 'dark',
+  workspace: 'light',
   profile: 'flat', // "flat" (default, clean 2D) | "sa" | "oem" | "cherry" | "dsa"
   legendColor: 'auto', // "auto" | "#rrggbb"
   legendPosition: 'top', // "top" | "front"

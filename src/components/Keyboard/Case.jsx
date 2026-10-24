@@ -8,10 +8,9 @@ export default function Case({ width, height, caseColor, caseFinish, filterId, b
   const caseW = width + PADDING * 2;
   const caseH = height + PADDING * 2;
   const isGloss = caseFinish === 'gloss';
-  // Gradient ids are per board so two boards in comparison mode never share
+  // Gradient id is per board so two boards in comparison mode never share
   // (and therefore never duplicate) an element id.
   const glossId = `case-gloss-${boardId}`;
-  const matteId = `case-matte-${boardId}`;
   // The plate is the darker floor visible between keycaps on a real board.
   const plateColor = mix(caseColor, '#000000', 0.28);
 
@@ -23,23 +22,16 @@ export default function Case({ width, height, caseColor, caseFinish, filterId, b
           <stop offset="0%" stopColor="#fff" stopOpacity="0.08" />
           <stop offset="40%" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        {/* Matte depth: transparent until the lower edge, then a soft shadow */}
-        <linearGradient id={matteId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#000" stopOpacity="0" />
-          <stop offset="72%" stopColor="#000" stopOpacity="0" />
-          <stop offset="100%" stopColor="#000" stopOpacity="0.22" />
-        </linearGradient>
       </defs>
 
       <rect x={x} y={y} width={caseW} height={caseH} rx={10} ry={10} fill={caseColor} filter={`url(#${filterId})`} />
 
-      {isGloss ? (
+      {/* Matte is the flat fill alone; gloss adds a reflection on top. */}
+      {isGloss && (
         <>
           <rect x={x} y={y} width={caseW} height={caseH} rx={10} ry={10} fill={`url(#${glossId})`} pointerEvents="none" />
           <line x1={x + 10} y1={y + 1} x2={x + caseW - 10} y2={y + 1} stroke="rgba(255,255,255,0.18)" strokeWidth={1} pointerEvents="none" />
         </>
-      ) : (
-        <rect x={x} y={y} width={caseW} height={caseH} rx={10} ry={10} fill={`url(#${matteId})`} pointerEvents="none" />
       )}
 
       {/* Inner bezel edge. */}
