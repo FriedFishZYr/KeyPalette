@@ -14,7 +14,7 @@ test('undo restores a color edit while preserving selection and workspace', () =
   assert.deepEqual(state.present.slots[0].keyColors, {});
   assert.deepEqual(state.present.slots[0].selectedKeys, ['KeyA', 'KeyB']);
   assert.equal(state.present.slots[0].workspace, 'light');
-  assert.equal(state.present.slots[0].activeColor, '#e0e0e0');
+  assert.equal(state.present.slots[0].activeColor, '#ffffff');
   state = reduce(state, { type: 'redo' });
   assert.equal(state.present.slots[0].keyColors.KeyA, '#ff0000');
   assert.equal(state.present.slots[0].activeColor, null);

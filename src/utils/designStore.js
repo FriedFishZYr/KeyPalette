@@ -12,13 +12,15 @@ export const STORAGE_PREFIX = 'keypalette';
 export const MAX_SLOTS = 5;
 export const MAX_NAME_LENGTH = 80;
 
-// Every key starts at and resets to this color. Kept in sync with the render
-// fallback in Keyboard.jsx.
-export const DEFAULT_KEY_COLOR = '#e0e0e0';
-export const DEFAULT_CASE_COLOR = '#1a1a1a';
+// Every key starts at and resets to this color: plain white caps, so a first
+// visit (and the Blank preset) looks like an unprinted board. Kept in sync
+// with the render fallback in Keyboard.jsx.
+export const DEFAULT_KEY_COLOR = '#ffffff';
+// Same case as the WoB preset.
+export const DEFAULT_CASE_COLOR = '#111111';
 
 export const DEFAULT_STATE = Object.freeze({
-  layout: 'tkl',
+  layout: '65',
   caseColor: DEFAULT_CASE_COLOR,
   caseFinish: 'matte',
   keyColors: {},

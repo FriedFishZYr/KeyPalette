@@ -1,5 +1,7 @@
 // Only design changes enter history. Selection, picker drafts, and workspace
 // preferences remain live; each saved design owns its own session history.
+import { DEFAULT_KEY_COLOR } from './designStore.js';
+
 const FIELDS = ['layout', 'keyColors', 'caseColor', 'caseFinish', 'profile',
   'legendColor', 'legendPosition', 'colorwayName'];
 const LIMIT = 50;
@@ -46,7 +48,7 @@ export function designHistoryReducer(state, action) {
     const current = state.present.slots[index];
     const target = source.at(-1);
     const selectedKeys = current.layout === target.layout ? current.selectedKeys : [];
-    const colors = selectedKeys.map((id) => target.keyColors[id] ?? '#e0e0e0');
+    const colors = selectedKeys.map((id) => target.keyColors[id] ?? DEFAULT_KEY_COLOR);
     const activeColor = colors.length
       ? colors.every((color) => color === colors[0]) ? colors[0] : null
       : current.activeColor;

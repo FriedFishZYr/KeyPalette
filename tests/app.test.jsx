@@ -18,13 +18,13 @@ const keyFill = (label) => document.querySelector(`g[aria-label^="${label} key"]
 
 test('a zone recolors live as the color changes, and undo restores it', () => {
   render(<App />);
-  expect(keyFill('Q')).toBe('#e0e0e0');
+  expect(keyFill('Q')).toBe('#ffffff');
   fireEvent.click(screen.getByRole('button', { name: 'Typing keys' }));
   fireEvent.change(screen.getByLabelText('Hex'), { target: { value: '#ff0000' } });
   expect(keyFill('Q')).toBe('#ff0000');
-  expect(keyFill('Tab')).toBe('#e0e0e0');
+  expect(keyFill('Tab')).toBe('#ffffff');
   fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-  expect(keyFill('Q')).toBe('#e0e0e0');
+  expect(keyFill('Q')).toBe('#ffffff');
 });
 
 test('a typing session in the hex field is one undo step and lands in Recent', () => {
@@ -39,7 +39,7 @@ test('a typing session in the hex field is one undo step and lands in Recent', (
   expect(screen.getByRole('button', { name: 'Use color #00ff00' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Use color #ff0000' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-  expect(keyFill('Q')).toBe('#e0e0e0');
+  expect(keyFill('Q')).toBe('#ffffff');
 });
 
 test('the picker is inert until keys are selected', () => {
@@ -66,10 +66,10 @@ test('the Blank preset resets every color', () => {
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
   fireEvent.click(within(document.querySelector('dialog')).getByRole('button', { name: 'Nord' }));
-  expect(keyFill('Q')).not.toBe('#e0e0e0');
+  expect(keyFill('Q')).not.toBe('#ffffff');
   fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
   fireEvent.click(within(document.querySelector('dialog')).getByRole('button', { name: 'Blank' }));
-  expect(keyFill('Q')).toBe('#e0e0e0');
+  expect(keyFill('Q')).toBe('#ffffff');
 });
 
 test('designs can be duplicated and deleted from My designs', () => {

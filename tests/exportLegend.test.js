@@ -5,9 +5,9 @@ test('legend lists each zone once with its distinct colors in first-seen order',
   const zones = collectZones('60', { q: '#FF0000', w: '#ff0000', a: '#00ff00', tab: '#0000ff' });
   // Layout order: Q is the first typing key, E is the first untouched one, A comes later.
   const alpha = zones.find((z) => z.label === 'Typing keys');
-  expect(alpha.colors).toEqual(['#ff0000', '#e0e0e0', '#00ff00']);
+  expect(alpha.colors).toEqual(['#ff0000', '#ffffff', '#00ff00']);
   // Backspace (row 0) precedes Tab in layout order.
-  expect(zones.find((z) => z.label === 'Modifiers').colors).toEqual(['#e0e0e0', '#0000ff']);
+  expect(zones.find((z) => z.label === 'Modifiers').colors).toEqual(['#ffffff', '#0000ff']);
   expect(zones.some((z) => z.label === 'Numpad')).toBe(false);
 });
 
